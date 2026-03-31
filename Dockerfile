@@ -3,6 +3,7 @@ FROM ubuntu:24.04 AS base
 # ---------- 1. 安装基础依赖 ----------
 RUN apt-get update && apt-get install -y --no-install-recommends \
     7zip \
+    btop \
     zsh \
     git \
     vim \
