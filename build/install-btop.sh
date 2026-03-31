@@ -1,16 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-version="${BTOP_VERSION:-latest}"
 target_arch="${TARGETARCH:-}"
-curl_retry=(
-  curl
-  -fsSL
-  --retry 5
-  --retry-delay 2
-  --retry-connrefused
-  --connect-timeout 15
-)
+version="v1.4.6"
+asset_dir="/opt/vendor/releases/btop/${version}"
 
 if [[ -z "${target_arch}" ]]; then
   target_arch="$(dpkg --print-architecture)"
@@ -30,12 +23,8 @@ case "${target_arch}" in
 esac
 
 archive_name="btop-${btop_arch}-unknown-linux-musl.tbz"
-
-if [[ "${version}" == "latest" ]]; then
-  release_url="https://github.com/aristocratos/btop/releases/latest/download"
-else
-  release_url="https://github.com/aristocratos/btop/releases/download/${version}"
-fi
+archive_path="${asset_dir}/${archive_name}"
+checksum_file="${asset_dir}/SHA256SUMS"
 
 tmp_dir="$(mktemp -d)"
 cleanup() {
@@ -43,8 +32,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${curl_retry[@]}" "${release_url}/${archive_name}" -o "${tmp_dir}/btop.tbz"
-tar -xjf "${tmp_dir}/btop.tbz" -C "${tmp_dir}"
+expected_sha="$(awk -v name="${archive_name}" '$2 == name {print $1}' "${checksum_file}")"
+actual_sha="$(sha256sum "${archive_path}" | awk '{print $1}')"
+
+if [[ -z "${expected_sha}" || "${actual_sha}" != "${expected_sha}" ]]; then
+  echo "Checksum mismatch for btop ${version} (${btop_arch})" >&2
+  echo "Expected: ${expected_sha:-missing}" >&2
+  echo "Actual:   ${actual_sha}" >&2
+  exit 1
+fi
+
+tar -xjf "${archive_path}" -C "${tmp_dir}"
 
 rm -rf /opt/btop
 mv "${tmp_dir}/btop" /opt/btop

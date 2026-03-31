@@ -16,14 +16,19 @@ oh-my-openpod/
 ├── build/
 │   ├── install-antidote.sh
 │   ├── install-btop.sh
+│   ├── update-vendor-assets.sh
 │   ├── install-yazi.sh
 │   └── install-zellij.sh
+├── docs/
+│   └── vendor-assets.md
 ├── config/
 │   ├── .zshrc
 │   ├── .p10k.zsh
 │   └── .zsh_plugins.txt
-└── vendor/                     # 预留给未来的 vendored 第三方依赖
-    └── .gitkeep
+└── vendor/
+    ├── manifest.lock.json
+    ├── releases/
+    └── zsh/
 ```
 
 ## 版本管理
@@ -57,10 +62,11 @@ image: oh-my-openpod:x.y.z       # 正式发布
 ## 依赖安装约定
 
 - `build/` 目录存放镜像构建期使用的安装脚本，例如 `install-antidote.sh`、`install-btop.sh`、`install-yazi.sh` 和 `install-zellij.sh`
+- `build/update-vendor-assets.sh` 用于刷新仓库内维护的 release 包和 Zsh 插件快照
 - `config/` 目录存放要复制进镜像的 shell 配置文件
-- `vendor/` 目录保留，但只留给未来确实不适合通过 build 安装脚本获取的 vendored 依赖
-- `install-antidote.sh` 和 `install-zellij.sh` 默认跟随各自上游的最新正式 release，也可以通过构建参数覆盖到特定版本
-- 本地 `docker build` 仍需要构建环境能访问 GitHub，因为 Antidote、btop、Yazi、Zellij 和 Zsh 插件都在构建期下载
+- `vendor/releases/` 存放构建脚本使用的固定 release 包，`vendor/zsh/` 存放默认 shell 使用的插件源码快照
+- `vendor/manifest.lock.json` 和 `docs/vendor-assets.md` 一起维护本地资产的来源、版本、校验和与更新方式
+- 默认本地 `docker build` 不再依赖 GitHub release 或 Zsh 插件仓库下载，但仍需要访问基础镜像来源，例如 Docker Hub 和 GHCR
 
 ## 发布流程
 

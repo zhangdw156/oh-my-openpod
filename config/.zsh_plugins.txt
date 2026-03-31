@@ -1,3 +1,6 @@
+# Vendored Zsh plugin inventory.
+# 构建时不会再联网拉取这些仓库；镜像默认使用 vendor/ 中的本地快照。
+
 # 1. OMZ 核心库（必须在最前面，其他 OMZ 插件依赖它）
 ohmyzsh/ohmyzsh path:lib
 
