@@ -5,11 +5,17 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-autoload -Uz compinit && compinit
+export ZSH=/opt/vendor/zsh/ohmyzsh
+export ZSH_DISABLE_COMPFIX=true
+export DISABLE_AUTO_UPDATE=true
+ZSH_THEME=""
+plugins=(git extract)
 
-source /opt/antidote/antidote.zsh
-zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins.txt
-antidote load
+source "${ZSH}/oh-my-zsh.sh"
+source /opt/vendor/zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /opt/vendor/zsh/zsh-history-substring-search/zsh-history-substring-search.zsh
+source /opt/vendor/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source /opt/vendor/zsh/powerlevel10k/powerlevel10k.zsh-theme
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
