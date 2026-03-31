@@ -1,16 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-version="${ZELLIJ_VERSION:-latest}"
 target_arch="${TARGETARCH:-}"
-curl_retry=(
-  curl
-  -fsSL
-  --retry 5
-  --retry-delay 2
-  --retry-connrefused
-  --connect-timeout 15
-)
+version="v0.44.0"
+asset_dir="/opt/vendor/releases/zellij/${version}"
 
 if [[ -z "${target_arch}" ]]; then
   target_arch="$(dpkg --print-architecture)"
@@ -32,13 +25,8 @@ esac
 asset_name="zellij-${zellij_arch}-unknown-linux-musl"
 archive_name="${asset_name}.tar.gz"
 checksum_name="${asset_name}.sha256sum"
-
-if [[ "${version}" == "latest" ]]; then
-  release_json="$("${curl_retry[@]}" https://api.github.com/repos/zellij-org/zellij/releases/latest)"
-  version="$(printf '%s' "${release_json}" | sed -nE 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/p' | head -n 1)"
-else
-  release_json=""
-fi
+archive_path="${asset_dir}/${archive_name}"
+checksum_path="${asset_dir}/${checksum_name}"
 
 tmp_dir="$(mktemp -d)"
 cleanup() {
@@ -46,14 +34,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
-release_url="https://github.com/zellij-org/zellij/releases/download/${version}"
+tar -xzf "${archive_path}" -C "${tmp_dir}"
 
-"${curl_retry[@]}" "${release_url}/${archive_name}" -o "${tmp_dir}/${archive_name}"
-"${curl_retry[@]}" "${release_url}/${checksum_name}" -o "${tmp_dir}/${checksum_name}"
-
-tar -xzf "${tmp_dir}/${archive_name}" -C "${tmp_dir}"
-
-expected_sha="$(awk '{print $1}' "${tmp_dir}/${checksum_name}")"
+expected_sha="$(awk '{print $1}' "${checksum_path}")"
 actual_sha="$(sha256sum "${tmp_dir}/zellij" | awk '{print $1}')"
 
 if [[ "${actual_sha}" != "${expected_sha}" ]]; then

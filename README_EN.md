@@ -36,7 +36,7 @@ oh-my-openpod packages **AI coding assistant + Python toolchain + beautiful Shel
 |----------|------|-------------|
 | **AI** | [OpenCode](https://github.com/opencode-ai/opencode) | Terminal AI coding assistant with custom provider support |
 | **Python** | [uv](https://github.com/astral-sh/uv) | Blazingly fast Python package & virtualenv manager |
-| **Shell** | Zsh + [Powerlevel10k](https://github.com/romkatv/powerlevel10k) + [Antidote](https://github.com/mattmc3/antidote) | Syntax highlighting, auto-suggestions, Git status |
+| **Shell** | Zsh + vendored plugin snapshots + [Powerlevel10k](https://github.com/romkatv/powerlevel10k) + [Antidote](https://github.com/mattmc3/antidote) | Syntax highlighting, auto-suggestions, Git status |
 | **Terminal** | [Zellij](https://github.com/zellij-org/zellij) | Terminal multiplexer for long-lived dev sessions |
 | **TUI** | [Yazi](https://yazi-rs.github.io/) | Modern terminal file manager for directory browsing and basic file inspection |
 | **Monitor** | [btop](https://github.com/aristocratos/btop) | Terminal resource monitor for CPU, memory, and process activity |
@@ -71,10 +71,9 @@ docker compose up -d --build
 PROJECT_DIR=/path/to/your/project docker compose up -d --build
 ```
 
-Local image builds still need GitHub access during the build in order to:
+Local image builds now use the vendored release assets and Zsh plugin snapshots stored in this repository, so they no longer depend on GitHub release downloads or plugin clones during the build.
 
-- download Antidote, btop, Yazi, and Zellij
-- prefetch the plugin repositories listed in `.zsh_plugins.txt`
+The remaining network requirement is access to base image registries such as Docker Hub and GHCR.
 
 ### 4. Option B: Use the Prebuilt GHCR Image
 
@@ -97,7 +96,7 @@ docker run --rm -it \
   ghcr.io/zhangdw156/oh-my-openpod:latest
 ```
 
-This is usually the better choice on servers because it avoids local builds and the GitHub access needed during image construction.
+This is usually the better choice on servers because it avoids local builds and any build-time dependency work beyond pulling the base images.
 
 Image URL:
 
@@ -148,7 +147,7 @@ Config files are in the `config/` directory. Rebuild after editing:
 |------|-------------|
 | `config/.zshrc` | Zsh main config |
 | `config/.p10k.zsh` | Powerlevel10k theme |
-| `config/.zsh_plugins.txt` | Antidote plugin list |
+| `config/.zsh_plugins.txt` | Vendored plugin inventory |
 
 ```bash
 docker compose up -d --build
@@ -163,21 +162,26 @@ oh-my-openpod/
 ├── build/
 │   ├── install-antidote.sh # Install Antidote
 │   ├── install-btop.sh     # Install btop
+│   ├── update-vendor-assets.sh # Refresh vendored release assets and plugin snapshots
 │   ├── install-yazi.sh     # Install Yazi
 │   └── install-zellij.sh   # Install Zellij
+├── docs/
+│   └── vendor-assets.md    # Vendored asset sources and maintenance notes
 ├── .env.example            # Environment variable template
 ├── opencode.json.example   # OpenCode AI provider config template
 ├── config/
 │   ├── .zshrc              # Zsh config
 │   ├── .p10k.zsh           # Powerlevel10k config
-│   └── .zsh_plugins.txt    # Plugin list
+│   └── .zsh_plugins.txt    # Vendored plugin inventory
 └── vendor/
-    └── .gitkeep            # Reserved for future vendored dependencies
+    ├── manifest.lock.json  # Vendored asset lock file
+    ├── releases/           # Pinned release packages used by build scripts
+    └── zsh/                # Zsh plugin source snapshots
 ```
 
 ## Contributing
 
-Issues and PRs are welcome! See [DEVELOPMENT.md](DEVELOPMENT.md) for developer documentation.
+Issues and PRs are welcome! See [DEVELOPMENT.md](DEVELOPMENT.md) for developer documentation and [docs/vendor-assets.md](docs/vendor-assets.md) for vendored asset details.
 
 ## License
 

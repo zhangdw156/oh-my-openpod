@@ -1,33 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-version="${ANTIDOTE_VERSION:-latest}"
-curl_retry=(
-  curl
-  -fsSL
-  --retry 5
-  --retry-delay 2
-  --retry-connrefused
-  --connect-timeout 15
-)
+version="v2.0.10"
+asset_dir="/opt/vendor/releases/antidote/${version}"
+archive_name="antidote-${version}.tar.gz"
+archive_path="${asset_dir}/${archive_name}"
+checksum_file="${asset_dir}/SHA256SUMS"
 
-if [[ "${version}" == "latest" ]]; then
-  release_json="$("${curl_retry[@]}" https://api.github.com/repos/mattmc3/antidote/releases/latest)"
-  version="$(printf '%s' "${release_json}" | sed -nE 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/p' | head -n 1)"
+expected_sha="$(awk -v name="${archive_name}" '$2 == name {print $1}' "${checksum_file}")"
+actual_sha="$(sha256sum "${archive_path}" | awk '{print $1}')"
+
+if [[ -z "${expected_sha}" || "${actual_sha}" != "${expected_sha}" ]]; then
+  echo "Checksum mismatch for antidote ${version}" >&2
+  echo "Expected: ${expected_sha:-missing}" >&2
+  echo "Actual:   ${actual_sha}" >&2
+  exit 1
 fi
-
-archive_url="https://codeload.github.com/mattmc3/antidote/tar.gz/refs/tags/${version}"
-
-tmp_dir="$(mktemp -d)"
-cleanup() {
-  rm -rf "${tmp_dir}"
-}
-trap cleanup EXIT
-
-"${curl_retry[@]}" "${archive_url}" -o "${tmp_dir}/antidote.tar.gz"
 
 rm -rf /opt/antidote
 mkdir -p /opt/antidote
-tar -xzf "${tmp_dir}/antidote.tar.gz" --strip-components=1 -C /opt/antidote
+tar -xzf "${archive_path}" --strip-components=1 -C /opt/antidote
 
 test -f /opt/antidote/antidote.zsh
