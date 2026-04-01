@@ -73,7 +73,7 @@ docker compose up -d --build
 PROJECT_DIR=/path/to/your/project docker compose up -d --build
 ```
 
-Local image builds now use the vendored release assets and Zsh plugin snapshots stored in this repository, so they no longer depend on GitHub release downloads or plugin clones during the build.
+Local image builds now use the vendored release assets, Zsh plugin snapshots, and OpenCode plugin packages stored in this repository, so they no longer depend on GitHub release downloads, plugin clones, or runtime plugin fetches during the build.
 
 The remaining network requirement is access to base image registries such as Docker Hub and GHCR.
 
@@ -89,7 +89,7 @@ docker pull ghcr.io/zhangdw156/oh-my-openpod:latest
 docker pull ghcr.io/zhangdw156/oh-my-openpod:0.1.0
 ```
 
-**Minimal**: mount the current directory to `/workspace` only (quick try; works without `.env` or a custom `opencode.json`).
+**Minimal**: mount the current directory to `/workspace` only (quick try; works without `.env` or a custom `opencode.json`). This path can use the vendored `superpowers` plugin that ships inside the image.
 
 ```bash
 docker run --rm -it \
@@ -100,6 +100,8 @@ docker run --rm -it \
 ```
 
 **Full**: when you need `--env-file .env` and a custom OpenCode config, first run `cp .env.example .env` and `cp opencode.json.example opencode.json` from [step 2](#2-configure-optional), edit them, then run:
+
+If you also want the repository-managed global skills, use this path and keep the `skills.paths` entry from the example config.
 
 ```bash
 docker run --rm -it \
@@ -149,6 +151,12 @@ Configure `.env` + `opencode.json` to connect to:
 - **Anthropic-compatible**: Self-hosted Claude / AWS Bedrock proxy, etc.
 - **Official services**: OpenAI / Anthropic APIs
 
+The image also preinstalls the vendored `superpowers` OpenCode plugin and reserves `/opt/vendor/opencode/skills` as the repository-managed global skills root.
+
+If you copy `opencode.json.example` as your own config, keep its `skills.paths` entry. If you replace the config file entirely, add that directory back yourself so repository-managed global skills remain discoverable.
+
+You do not need to add the bundled `superpowers` skills to `skills.paths` manually because the plugin registers its own `skills/` directory at runtime.
+
 ```bash
 # .env example
 CUSTOM_OPENAI_BASE_URL=https://your-host/v1
@@ -179,7 +187,7 @@ oh-my-openpod/
 ├── build/
 │   ├── install-antidote.sh # Install Antidote
 │   ├── install-btop.sh     # Install btop
-│   ├── update-vendor-assets.sh # Refresh vendored release assets and plugin snapshots
+│   ├── update-vendor-assets.sh # Refresh vendored release assets, plugin snapshots, and OpenCode plugin packages
 │   ├── install-yazi.sh     # Install Yazi
 │   └── install-zellij.sh   # Install Zellij
 ├── docs/
@@ -192,6 +200,9 @@ oh-my-openpod/
 │   └── .zsh_plugins.txt    # Vendored plugin inventory
 └── vendor/
     ├── manifest.lock.json  # Vendored asset lock file
+    ├── opencode/
+    │   ├── packages/       # OpenCode plugin packages that keep upstream layout
+    │   └── skills/         # Repository-managed OpenCode global skills
     ├── releases/           # Pinned release packages used by build scripts
     └── zsh/                # Zsh plugin source snapshots
 ```

@@ -1,5 +1,14 @@
 {
   "$schema": "https://opencode.ai/config.json",
+
+  // ----------------------------------------------------------------
+  // 镜像已通过 /root/.config/opencode/plugins 预置 vendored superpowers 插件。
+  // 这里保留 /opt/vendor/opencode/skills 作为仓库维护的全局 skills 根目录。
+  // ----------------------------------------------------------------
+  "skills": {
+    "paths": ["/opt/vendor/opencode/skills"]
+  },
+
   "provider": {
 
     // ----------------------------------------------------------------

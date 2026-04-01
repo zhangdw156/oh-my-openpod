@@ -27,6 +27,10 @@ oh-my-openpod/
 │   └── .zsh_plugins.txt
 └── vendor/
     ├── manifest.lock.json
+    ├── opencode/
+    │   ├── packages/
+    │   │   └── superpowers/
+    │   └── skills/
     ├── releases/
     └── zsh/
 ```
@@ -62,11 +66,20 @@ image: oh-my-openpod:x.y.z       # 正式发布
 ## 依赖安装约定
 
 - `build/` 目录存放镜像构建期使用的安装脚本，例如 `install-antidote.sh`、`install-btop.sh`、`install-yazi.sh` 和 `install-zellij.sh`
-- `build/update-vendor-assets.sh` 用于刷新仓库内维护的 release 包和 Zsh 插件快照
+- `build/update-vendor-assets.sh` 用于刷新仓库内维护的 release 包、Zsh 插件快照和 OpenCode 插件包快照
 - `config/` 目录存放要复制进镜像的 shell 配置文件
 - `vendor/releases/` 存放构建脚本使用的固定 release 包，`vendor/zsh/` 存放默认 shell 使用的插件源码快照
+- `vendor/opencode/packages/` 存放需要保留原始包结构的 OpenCode 插件包快照
+- `vendor/opencode/skills/` 预留给仓库直接维护的 OpenCode 全局 skills
 - `vendor/manifest.lock.json` 和 `docs/vendor-assets.md` 一起维护本地资产的来源、版本、校验和与更新方式
-- 默认本地 `docker build` 不再依赖 GitHub release 或 Zsh 插件仓库下载，但仍需要访问基础镜像来源，例如 Docker Hub 和 GHCR
+- 默认本地 `docker build` 不再依赖 GitHub release、Zsh 插件仓库或 OpenCode 插件仓库的运行时拉取，但仍需要访问基础镜像来源，例如 Docker Hub 和 GHCR
+
+### OpenCode 资产约定
+
+- `superpowers` 以完整包快照的形式维护在 `vendor/opencode/packages/superpowers/`
+- 不要只抽取 `.opencode/plugins/superpowers.js` 或只复制 `skills/`，因为上游插件会基于自身入口文件相对路径解析 `../../skills`
+- 镜像构建时会在 `/root/.config/opencode/plugins/superpowers.js` 创建指向 vendored 包入口的软链接
+- `opencode.json.example` 只把 `/opt/vendor/opencode/skills` 加入 `skills.paths`；`superpowers` 自带的 skills 由插件自身在运行时注册
 
 ## 发布流程
 
