@@ -6,9 +6,13 @@
 oh-my-openpod/
 ├── Dockerfile                # openpod 兼容构建入口
 ├── Dockerfile.devpod
-├── Dockerfile.openpod
-├── Dockerfile.claudepod
-├── Dockerfile.codexpod
+├── docker/
+│   ├── openpod/
+│   │   └── Dockerfile
+│   ├── claudepod/
+│   │   └── Dockerfile
+│   └── codexpod/
+│       └── Dockerfile
 ├── docker-compose.yml          # 多 flavor 编排配置
 ├── .env.example               # openpod flavor 可选环境变量模板
 ├── .github/
@@ -128,7 +132,7 @@ image: oh-my-codexpod:x.y.z.dev0
 ### Multi-Flavor 约定
 
 - 共享基础层只放在 `Dockerfile.devpod` 和 `build/` 中
-- flavor 差异只能出现在 `runtime/<flavor>/` 和对应的 `Dockerfile.<flavor>` 中
+- flavor 差异只能出现在 `runtime/<flavor>/` 和对应的 `docker/<flavor>/Dockerfile` 中
 - `docker-compose.yml` 必须同时维护 `devpod`、`openpod`、`claudepod`、`codexpod`
 - flavor Dockerfile 通过 `additional_contexts` 复用 `devpod` 基座
 - 新增 harness 时，先创建新的 `runtime/<flavor>/`，不要把逻辑直接写进共享基座

@@ -1,3 +1,4 @@
 .env
 opencode.json
+!runtime/openpod/config/opencode.json
 .worktrees/

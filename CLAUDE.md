@@ -65,7 +65,7 @@ Release flow details live in `DEVELOPMENT.md`.
 ### 1. Shared base plus flavor runtimes
 
 - `Dockerfile.devpod` and `build/` own shared shell, editor, Python, and terminal tooling
-- `Dockerfile.openpod`, `Dockerfile.claudepod`, and `Dockerfile.codexpod` only add harness-specific layers
+- `docker/openpod/Dockerfile`, `docker/claudepod/Dockerfile`, and `docker/codexpod/Dockerfile` only add harness-specific layers
 - `runtime/<flavor>/` owns harness-specific launchers, config, installers, skills, and any flavor-specific vendored assets
 
 ### 2. `docker-compose.yml` is the local multi-flavor contract

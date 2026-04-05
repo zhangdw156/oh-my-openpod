@@ -8,7 +8,7 @@ services:
   openpod:
     build:
       context: .
-      dockerfile: Dockerfile.openpod
+      dockerfile: docker/openpod/Dockerfile
       network: host
       additional_contexts:
         devpod: service:devpod
@@ -29,7 +29,7 @@ services:
   claudepod:
     build:
       context: .
-      dockerfile: Dockerfile.claudepod
+      dockerfile: docker/claudepod/Dockerfile
       network: host
       additional_contexts:
         devpod: service:devpod
@@ -47,7 +47,7 @@ services:
   codexpod:
     build:
       context: .
-      dockerfile: Dockerfile.codexpod
+      dockerfile: docker/codexpod/Dockerfile
       network: host
       additional_contexts:
         devpod: service:devpod

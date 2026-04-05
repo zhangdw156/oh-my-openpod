@@ -79,6 +79,15 @@ docker compose build devpod claudepod
 docker compose build devpod codexpod
 ```
 
+也可以直接指定 flavor Dockerfile：
+
+```bash
+docker build -f Dockerfile.devpod -t oh-my-devpod:local .
+docker build -f docker/openpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-openpod:local .
+docker build -f docker/claudepod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-claudepod:local .
+docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-codexpod:local .
+```
+
 ### 运行某个 flavor
 
 ```bash
@@ -138,9 +147,10 @@ codexpod-shell
 oh-my-openpod/
 ├── Dockerfile                # openpod 兼容构建入口
 ├── Dockerfile.devpod
-├── Dockerfile.openpod
-├── Dockerfile.claudepod
-├── Dockerfile.codexpod
+├── docker/
+│   ├── openpod/Dockerfile
+│   ├── claudepod/Dockerfile
+│   └── codexpod/Dockerfile
 ├── docker-compose.yml
 ├── runtime/
 │   ├── openpod/
