@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 vendor_dir="${repo_root}/vendor"
+runtime_dir="${repo_root}/runtime"
 tmp_dir="$(mktemp -d)"
 
 cleanup() {
@@ -130,5 +131,13 @@ download_plugin_snapshot "zsh-users/zsh-syntax-highlighting" "${syntax_highlight
 download_plugin_snapshot "obra/superpowers" "refs/tags/${superpowers_version}" "${vendor_dir}/opencode/packages/superpowers"
 download_plugin_snapshot "LazyVim/starter" "${lazyvim_starter_commit}" "${vendor_dir}/nvim/lazyvim-starter"
 printf '%s\n' "${lazyvim_starter_commit}" > "${vendor_dir}/nvim/lazyvim-starter/.openpod-source-commit"
+
+for flavor in claudepod codexpod; do
+  if [[ -d "${runtime_dir}/${flavor}/skills/superpowers" ]]; then
+    rm -rf "${runtime_dir}/${flavor}/skills/superpowers"
+  fi
+  mkdir -p "${runtime_dir}/${flavor}/skills"
+  cp -R "${vendor_dir}/opencode/packages/superpowers/skills" "${runtime_dir}/${flavor}/skills/superpowers"
+done
 
 echo "Vendored assets updated under ${vendor_dir}"

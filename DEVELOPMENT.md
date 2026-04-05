@@ -4,9 +4,13 @@
 
 ```
 oh-my-openpod/
-├── Dockerfile
-├── docker-compose.yml          # 版本号在 image 字段中维护
-├── .env.example
+├── Dockerfile                # openpod 兼容构建入口
+├── Dockerfile.devpod
+├── Dockerfile.openpod
+├── Dockerfile.claudepod
+├── Dockerfile.codexpod
+├── docker-compose.yml          # 多 flavor 编排配置
+├── .env.example               # openpod flavor 可选环境变量模板
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   └── workflows/
@@ -23,8 +27,14 @@ oh-my-openpod/
 │   └── install-zellij.sh
 ├── docs/
 │   └── vendor-assets.md
+├── runtime/
+│   ├── openpod/
+│   ├── claudepod/
+│   └── codexpod/
 ├── tests/
 │   ├── run.sh
+│   ├── test-compose-flavors.sh
+│   ├── test-bootstrap-flavors.sh
 │   ├── test-install-lazyvim.sh
 │   ├── test-install-neovim.sh
 │   └── test-neovim-lazyvim-wiring.sh
@@ -49,11 +59,13 @@ oh-my-openpod/
 
 ## 版本管理
 
-版本号唯一维护在 `docker-compose.yml` 的 `image` 字段中：
+版本号仍然维护在 `docker-compose.yml` 的 `image` 字段中，但现在有多个 flavor 镜像：
 
 ```yaml
-image: oh-my-openpod:x.y.z.dev0  # 开发中
-image: oh-my-openpod:x.y.z       # 正式发布
+image: oh-my-devpod:x.y.z.dev0
+image: oh-my-openpod:x.y.z.dev0
+image: oh-my-claudepod:x.y.z.dev0
+image: oh-my-codexpod:x.y.z.dev0
 ```
 
 | 版本格式 | 含义 |
@@ -80,13 +92,14 @@ image: oh-my-openpod:x.y.z       # 正式发布
 
 - `build/` 目录存放镜像构建期使用的安装脚本，例如 `install-antidote.sh`、`install-btop.sh`、`install-neovim.sh`、`install-python-dev-tools.sh`、`install-lazyvim.sh`、`install-yazi.sh` 和 `install-zellij.sh`
 - 这些安装脚本同时也是 bootstrap 模式的基础构件；新增脚本时优先保持可通过环境变量改写安装前缀与目标路径
-- `build/update-vendor-assets.sh` 用于刷新仓库内维护的 release 包、LazyVim starter 快照、Zsh 插件快照和 OpenCode 插件包快照
-- `config/` 目录存放要复制进镜像的配置文件，包括 shell 配置和内置的 `opencode.json`
+- `build/update-vendor-assets.sh` 用于刷新共享 release 包、LazyVim starter 快照、Zsh 插件快照，并同步 flavor 目录下复用的 skills
+- `config/` 目录只存放共享配置，例如 shell 配置和 `nvim` overlay
+- `runtime/` 目录按 flavor 拆分 harness 相关安装脚本、launcher、config 和 skills
 - `vendor/releases/` 存放构建脚本使用的固定 release 包，`vendor/nvim/` 存放默认 Neovim 配置快照，`vendor/zsh/` 存放默认 shell 使用的插件源码快照
 - `config/nvim/` 存放仓库直接维护的 LazyVim overlay；用于在不修改 vendored starter 快照的前提下追加 openpod 默认行为
 - `vendor/opencode/packages/` 存放需要保留原始包结构的 OpenCode 插件包快照
 - `vendor/opencode/skills/` 预留给仓库直接维护的 OpenCode 全局 skills
-- `tests/` 目录存放仓库维护的 shell 级回归测试；优先覆盖安装脚本行为和关键接线关系
+- `tests/` 目录存放仓库维护的 shell 级回归测试；优先覆盖 flavor 编排、bootstrap 参数、安装脚本行为和关键接线关系
 - `vendor/manifest.lock.json` 和 `docs/vendor-assets.md` 一起维护本地资产的来源、版本、校验和与更新方式
 - 默认本地 `docker build` 不再依赖 GitHub release、Zsh 插件仓库或 OpenCode 插件仓库的运行时拉取，但仍需要访问基础镜像来源，例如 Docker Hub 和 GHCR
 
@@ -109,6 +122,14 @@ image: oh-my-openpod:x.y.z       # 正式发布
 - 镜像还会把 `config/opencode.json` 复制到 `/root/.config/opencode/config.json`，作为 OpenCode 的全局默认配置
 - `config/opencode.json` 只保留镜像级 provider 默认值；不要在其中手动添加 `superpowers/skills`，因为插件会在运行时注册它自己的 bundled skills
 - `docker-compose.yml` 不再从宿主机挂载全局 OpenCode 配置；项目级自定义应放在挂载到 `/workspace` 的项目根目录 `opencode.json`
+
+### Multi-Flavor 约定
+
+- 共享基础层只放在 `Dockerfile.devpod` 和 `build/` 中
+- flavor 差异只能出现在 `runtime/<flavor>/` 和对应的 `Dockerfile.<flavor>` 中
+- `docker-compose.yml` 必须同时维护 `devpod`、`openpod`、`claudepod`、`codexpod`
+- flavor Dockerfile 通过 `additional_contexts` 复用 `devpod` 基座
+- 新增 harness 时，先创建新的 `runtime/<flavor>/`，不要把逻辑直接写进共享基座
 
 ## 发布流程
 

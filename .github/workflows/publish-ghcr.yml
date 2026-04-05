@@ -1,4 +1,4 @@
-name: Publish Docker Image
+name: Publish Docker Images
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          image_ref="$(sed -nE 's/^[[:space:]]*image:[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' docker-compose.yml | head -n 1)"
+          image_ref="$(sed -nE 's/^[[:space:]]*image:[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' docker-compose.yml | grep 'oh-my-openpod:' | head -n 1)"
           if [[ -z "$image_ref" ]]; then
             echo "Unable to find an image entry in docker-compose.yml" >&2
             exit 1
@@ -40,18 +40,21 @@ jobs:
           fi
 
           owner="${GITHUB_REPOSITORY_OWNER,,}"
-          repo="${GITHUB_REPOSITORY#*/}"
-          repo="${repo,,}"
-          image_name="ghcr.io/${owner}/${repo}"
+          base_image_name="ghcr.io/${owner}/oh-my-devpod"
+          openpod_image_name="ghcr.io/${owner}/oh-my-openpod"
+          claudepod_image_name="ghcr.io/${owner}/oh-my-claudepod"
+          codexpod_image_name="ghcr.io/${owner}/oh-my-codexpod"
 
           publish="true"
           if [[ "$version" == *-dev || "$version" =~ \.dev[0-9]+$ ]]; then
             publish="false"
           fi
 
-          echo "image_ref=$image_ref" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
+          echo "base_image_name=$base_image_name" >> "$GITHUB_OUTPUT"
+          echo "openpod_image_name=$openpod_image_name" >> "$GITHUB_OUTPUT"
+          echo "claudepod_image_name=$claudepod_image_name" >> "$GITHUB_OUTPUT"
+          echo "codexpod_image_name=$codexpod_image_name" >> "$GITHUB_OUTPUT"
           echo "publish=$publish" >> "$GITHUB_OUTPUT"
 
       - name: Skip dev image versions
@@ -73,12 +76,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Generate Docker metadata
+      - name: Generate base Docker metadata
         if: steps.version.outputs.publish == 'true'
-        id: meta
+        id: meta_base
         uses: docker/metadata-action@v5
         with:
-          images: ${{ steps.version.outputs.image_name }}
+          images: ${{ steps.version.outputs.base_image_name }}
           tags: |
             type=raw,value=${{ steps.version.outputs.version }}
             type=raw,value=latest
@@ -89,15 +92,58 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
 
-      - name: Build and push image
+      - name: Build and push devpod base image
         if: steps.version.outputs.publish == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: Dockerfile.devpod
           push: true
           provenance: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta_base.outputs.tags }}
+          labels: ${{ steps.meta_base.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push openpod image
+        if: steps.version.outputs.publish == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.openpod
+          build-args: |
+            DEVPOD_BASE_IMAGE=${{ steps.version.outputs.base_image_name }}:${{ steps.version.outputs.version }}
+          push: true
+          provenance: false
+          tags: ${{ steps.version.outputs.openpod_image_name }}:${{ steps.version.outputs.version }},${{ steps.version.outputs.openpod_image_name }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push claudepod image
+        if: steps.version.outputs.publish == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.claudepod
+          build-args: |
+            DEVPOD_BASE_IMAGE=${{ steps.version.outputs.base_image_name }}:${{ steps.version.outputs.version }}
+          push: true
+          provenance: false
+          tags: ${{ steps.version.outputs.claudepod_image_name }}:${{ steps.version.outputs.version }},${{ steps.version.outputs.claudepod_image_name }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push codexpod image
+        if: steps.version.outputs.publish == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.codexpod
+          build-args: |
+            DEVPOD_BASE_IMAGE=${{ steps.version.outputs.base_image_name }}:${{ steps.version.outputs.version }}
+          push: true
+          provenance: false
+          tags: ${{ steps.version.outputs.codexpod_image_name }}:${{ steps.version.outputs.version }},${{ steps.version.outputs.codexpod_image_name }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -112,10 +158,15 @@ jobs:
 
           {
             echo "Published Docker images:"
-            echo "- \`${IMAGE_NAME}:${VERSION}\`"
-            echo "- \`${IMAGE_NAME}:latest\`"
+            echo "- \`${BASE_IMAGE}:${VERSION}\`"
+            echo "- \`${OPENPOD_IMAGE}:${VERSION}\`"
+            echo "- \`${CLAUDEPOD_IMAGE}:${VERSION}\`"
+            echo "- \`${CODEXPOD_IMAGE}:${VERSION}\`"
           } >> "$GITHUB_STEP_SUMMARY"
         env:
-          IMAGE_NAME: ${{ steps.version.outputs.image_name }}
+          BASE_IMAGE: ${{ steps.version.outputs.base_image_name }}
+          OPENPOD_IMAGE: ${{ steps.version.outputs.openpod_image_name }}
+          CLAUDEPOD_IMAGE: ${{ steps.version.outputs.claudepod_image_name }}
+          CODEXPOD_IMAGE: ${{ steps.version.outputs.codexpod_image_name }}
           PUBLISH: ${{ steps.version.outputs.publish }}
           VERSION: ${{ steps.version.outputs.version }}
