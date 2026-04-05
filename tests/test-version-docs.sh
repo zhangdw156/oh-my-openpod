@@ -20,7 +20,7 @@ check_contains() {
 
 check_no_compose_source_truth() {
   local file="$1"
-  if rg -q 'compose.*source of truth' "$file"; then
+  if rg -q 'compose.*source of truth' "$file" && ! rg -q 'compose.*not.*source of truth' "$file"; then
     fail "$(basename "$file") should not describe compose files as the version source of truth"
   fi
 }
@@ -35,6 +35,10 @@ check_contains "${repo_root}/README.md" 'IMAGE_VERSION' "README.md should descri
 check_contains "${repo_root}/README_EN.md" 'IMAGE_VERSION' "README_EN.md should describe the IMAGE_VERSION consumption model"
 check_contains "${repo_root}/DEVELOPMENT.md" 'IMAGE_VERSION' "DEVELOPMENT.md should describe the IMAGE_VERSION consumption model"
 check_contains "${repo_root}/CLAUDE.md" 'IMAGE_VERSION' "CLAUDE.md should describe the IMAGE_VERSION consumption model"
+check_contains "${repo_root}/DEVELOPMENT.md" '不会自动读取 `VERSION`' "DEVELOPMENT.md should state that compose does not read VERSION automatically"
+check_contains "${repo_root}/CLAUDE.md" 'do not read `VERSION` automatically' "CLAUDE.md should state that compose does not read VERSION automatically"
+check_contains "${repo_root}/DEVELOPMENT.md" 'export' "DEVELOPMENT.md should explain how to inject IMAGE_VERSION from VERSION"
+check_contains "${repo_root}/CLAUDE.md" 'export' "CLAUDE.md should explain how to inject IMAGE_VERSION from VERSION"
 
 check_no_compose_source_truth "${repo_root}/README.md"
 check_no_compose_source_truth "${repo_root}/README_EN.md"

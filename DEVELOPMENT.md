@@ -65,7 +65,7 @@ oh-my-openpod/
 
 仓库根目录 `VERSION` 文件是四个镜像唯一的版本真源，格式为 `x.y.z.devN`（开发）或 `x.y.z`（正式发布）。
 
-`docker/<flavor>/docker-compose.yaml` 通过 `${IMAGE_VERSION:-local}` 消费这个版本。compose 本身不会自动读取 `VERSION`，因此在需要让本地 compose 构建的标签与中心版本一致时，应先执行 `IMAGE_VERSION="$(cat VERSION)"` 或导出该环境变量；未设置时 `IMAGE_VERSION` 默认为 `local`。
+`docker/<flavor>/docker-compose.yaml` 通过 `${IMAGE_VERSION:-local}` 消费这个版本。compose 本身不会自动读取 `VERSION`，因此在需要让本地 compose 构建的标签与中心版本一致时，应先执行 `IMAGE_VERSION="$(cat VERSION)"`，或显式 `export IMAGE_VERSION="$(cat VERSION)"` 后再运行 compose；未设置时 `IMAGE_VERSION` 默认为 `local`。
 
 | 版本格式 | 含义 |
 |----------|------|
@@ -158,7 +158,7 @@ git push origin vx.y.z
 
 # 5. 开始下一个版本的开发
 git checkout -b chore/bump-version-to-next-dev
-#    只需把根目录 `VERSION` 更新到 <next-version>.dev0，pod-local compose 中通过 `${IMAGE_VERSION:-local}` 会自动消费这个值
+#    只需把根目录 `VERSION` 更新到 <next-version>.dev0；如需让 pod-local compose 使用相同标签，需显式注入 IMAGE_VERSION
 git add VERSION
 git commit -m "chore: bump version to <next-version>.dev0"
 git push -u origin chore/bump-version-to-next-dev
