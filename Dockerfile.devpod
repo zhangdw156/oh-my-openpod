@@ -1,0 +1,59 @@
+FROM ubuntu:24.04 AS devpod-base
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bzip2 \
+    curl \
+    fd-find \
+    file \
+    gcc \
+    git \
+    make \
+    ripgrep \
+    tzdata \
+    unzip \
+    vim \
+    zsh \
+    ca-certificates \
+    musl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY vendor /opt/vendor
+
+ARG TARGETARCH
+COPY build/install-btop.sh /tmp/install-btop.sh
+RUN bash /tmp/install-btop.sh && rm -f /tmp/install-btop.sh
+COPY build/install-antidote.sh /tmp/install-antidote.sh
+RUN bash /tmp/install-antidote.sh && rm -f /tmp/install-antidote.sh
+COPY build/install-zellij.sh /tmp/install-zellij.sh
+RUN bash /tmp/install-zellij.sh && rm -f /tmp/install-zellij.sh
+COPY build/install-yazi.sh /tmp/install-yazi.sh
+RUN bash /tmp/install-yazi.sh && rm -f /tmp/install-yazi.sh
+COPY build/install-neovim.sh /tmp/install-neovim.sh
+RUN bash /tmp/install-neovim.sh && rm -f /tmp/install-neovim.sh
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+COPY build/install-python-dev-tools.sh /tmp/install-python-dev-tools.sh
+RUN bash /tmp/install-python-dev-tools.sh && rm -f /tmp/install-python-dev-tools.sh
+COPY config/nvim /opt/devpod-config/nvim
+COPY build/install-lazyvim.sh /tmp/install-lazyvim.sh
+RUN OPENPOD_NVM_OVERLAY_DIR=/opt/devpod-config/nvim bash /tmp/install-lazyvim.sh && rm -f /tmp/install-lazyvim.sh
+
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV OPENPOD_LAZYVIM_STARTER_COMMIT=803bc181d7c0d6d5eeba9274d9be49b287294d99
+ENV OPENPOD_LAZYVIM_SOURCE_DIR=/opt/vendor/nvim/lazyvim-starter
+ENV OPENPOD_NEOVIM_DIR=/opt/neovim
+ENV OPENPOD_NVM_OVERLAY_DIR=/opt/devpod-config/nvim
+ENV OPENPOD_PYRIGHT_VERSION=1.1.408
+ENV OPENPOD_RUFF_VERSION=0.15.9
+ENV OPENPOD_UV_TOOL_DIR=/opt/uv-tools
+ENV TERM=xterm-256color
+ENV SHELL=/bin/zsh
+ENV UV_LINK_MODE=copy
+ENV TZ=Asia/Shanghai
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then ln -sf "$(command -v fdfind)" /usr/local/bin/fd; fi
+RUN git config --global --add safe.directory '*'
+COPY config/.zshrc /root/.zshrc
+COPY config/.p10k.zsh /root/.p10k.zsh
+WORKDIR /workspace
+ENTRYPOINT ["/bin/zsh"]

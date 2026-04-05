@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="${OPENPOD_REPO_ROOT:?missing OPENPOD_REPO_ROOT}"
+bin_dir="${OPENPOD_BIN_DIR:?missing OPENPOD_BIN_DIR}"
+config_home="${OPENPOD_CONFIG_HOME:?missing OPENPOD_CONFIG_HOME}"
+vendor_home="${OPENPOD_VENDOR_HOME:?missing OPENPOD_VENDOR_HOME}"
+prefix="${OPENPOD_PREFIX:?missing OPENPOD_PREFIX}"
+shell_dir="${OPENPOD_SHELL_DIR:?missing OPENPOD_SHELL_DIR}"
+
+mkdir -p "${config_home}/plugins"
+cp "${repo_root}/runtime/openpod/config/opencode.json" "${config_home}/config.json"
+ln -sfn "${vendor_home}/opencode/packages/superpowers/.opencode/plugins/superpowers.js" "${config_home}/plugins/superpowers.js"
+ln -sfn "${vendor_home}/opencode/skills" "${config_home}/skills"
+
+need_opencode_install=0
+if [[ ! -x "${bin_dir}/opencode" ]]; then
+  need_opencode_install=1
+elif ! "${bin_dir}/opencode" --version >/dev/null 2>&1; then
+  need_opencode_install=1
+fi
+
+if [[ "${need_opencode_install}" == "1" ]]; then
+  if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+    echo "openpod bootstrap requires node and npm to be preinstalled" >&2
+    exit 1
+  fi
+  opencode_prefix="${prefix}/opt/opencode-cli"
+  mkdir -p "${opencode_prefix}"
+  npm install -g --prefix "${opencode_prefix}" opencode-ai@1.3.13
+  ln -sfn "${opencode_prefix}/bin/opencode" "${bin_dir}/opencode"
+fi
+
+install -m 0755 "${repo_root}/runtime/openpod/bin/openpod-shell" "${bin_dir}/openpod-shell"
