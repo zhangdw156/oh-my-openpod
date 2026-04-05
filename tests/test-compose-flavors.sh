@@ -13,7 +13,10 @@ fail() {
 [[ ! -f "${repo_root}/docker-compose.yml" ]] || fail "root docker-compose.yml should not exist"
 [[ ! -f "${repo_root}/docker-compose.yaml" ]] || fail "root docker-compose.yaml should not exist"
 
-version="$(tr -d '\n' < "${repo_root}/VERSION")"
+version="$(tr -d '\r' < "${repo_root}/VERSION")"
+version="${version%%$'\n'*}"
+version="${version%"${version##*[![:space:]]}"}"
+version="${version#"${version%%[![:space:]]*}"}"
 [[ -n "${version}" ]] || fail "VERSION file should not be empty"
 
 check_compose() {
@@ -22,18 +25,23 @@ check_compose() {
   local tmp_out
 
   [[ -f "${compose_file}" ]] || fail "missing compose file: ${compose_file}"
-  rg -q -F 'image: oh-my-devpod:${IMAGE_VERSION:-local}' "${compose_file}" \
+  rg -q 'image:[[:space:]]*oh-my-devpod:\$\{IMAGE_VERSION:-local\}' "${compose_file}" \
     || fail "compose should use IMAGE_VERSION for devpod in ${compose_file}"
-  rg -q -F "image: oh-my-${flavor}:\${IMAGE_VERSION:-local}" "${compose_file}" \
+  flavor_pattern='image:[[:space:]]*oh-my-'
+  flavor_pattern+="${flavor}"
+  flavor_pattern+=':\$\{IMAGE_VERSION:-local\}'
+  rg -q "${flavor_pattern}" "${compose_file}" \
     || fail "compose should use IMAGE_VERSION for ${flavor} in ${compose_file}"
-  if rg -q -F "image: oh-my-devpod:${version}" "${compose_file}"; then
+  if rg -q "image:[[:space:]]*oh-my-(devpod|${flavor}):${version}" "${compose_file}"; then
     fail "compose should not hard-code ${version} in ${compose_file}"
   fi
-  if rg -q -F "image: oh-my-${flavor}:${version}" "${compose_file}"; then
-    fail "compose should not hard-code ${version} in ${compose_file}"
+  if rg -q 'image:[[:space:]]*oh-my-(devpod|openpod|claudepod|codexpod):[0-9]' "${compose_file}"; then
+    fail "compose should not hard-code numeric image tags in ${compose_file}"
   fi
 
   tmp_out="$(mktemp)"
+  cleanup_tmp() { [[ -n "${tmp_out:-}" ]] && rm -f "${tmp_out}"; }
+  trap cleanup_tmp EXIT
   IMAGE_VERSION=test-version docker compose -f "${compose_file}" config > "${tmp_out}"
 
   for service in devpod "${flavor}"; do
@@ -60,8 +68,8 @@ check_compose() {
   if rg -q "^\\s+env_file:" "${tmp_out}"; then
     fail "compose should not define env_file entries in ${compose_file}"
   fi
-
-  rm -f "${tmp_out}"
+  cleanup_tmp
+  trap - EXIT
 }
 
 for flavor in openpod claudepod codexpod; do
