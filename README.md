@@ -73,12 +73,9 @@ docker compose -f docker/claudepod/docker-compose.yaml build devpod claudepod
 docker compose -f docker/codexpod/docker-compose.yaml build devpod codexpod
 ```
 
-构建完成后，对应镜像名分别是：
+构建完成后，镜像会根据 `${IMAGE_VERSION:-local}` 进行打标，例如 `oh-my-openpod:${IMAGE_VERSION:-local}`。为了让本地 compose 构建的标签与仓库根的 `VERSION` 一致，可以在运行 `docker compose` 命令前执行 `IMAGE_VERSION="$(cat VERSION)"`（或先 `export IMAGE_VERSION="$(cat VERSION)"`）；未设置时默认使用 `local`。
 
-- `oh-my-openpod:0.4.0.dev5`
-- `oh-my-claudepod:0.4.0.dev5`
-- `oh-my-codexpod:0.4.0.dev5`
-- 仓库根目录 `VERSION` 是四个镜像共享的版本真源；pod-local compose 仅消费它，不再保存发布版本号
+仓库根目录 `VERSION` 是四个镜像共享的版本真源；pod-local compose 文件通过 `${IMAGE_VERSION:-local}` 消费它，默认仅产出 `local` 标签并不在 compose 中保存发布版本号。
 
 ### 通过 compose 运行某个 flavor
 

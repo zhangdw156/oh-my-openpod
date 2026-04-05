@@ -18,7 +18,7 @@ This repository is Bash- and YAML-heavy. Use `#!/usr/bin/env bash`, keep `set -e
 There is no first-party unit test suite at the root; validation is mostly smoke-based. After behavior changes, run `bash tests/run.sh`, then rebuild and smoke-test affected flavors. When vendored versions change, review `vendor/manifest.lock.json`, `docs/vendor-assets.md`, `runtime/openpod/vendor/opencode/`, and any synchronized flavor skill trees under `runtime/`.
 
 ## Commit & Pull Request Guidelines
-Follow the existing Conventional Commit style: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, and `release:`. Keep subjects imperative and focused; issue refs such as `(#27)` are common. PRs should explain the user-visible effect, list verification commands, link the related issue, and call out any version or tag changes in `docker/<flavor>/docker-compose.yaml`. Include screenshots only when terminal UX, docs examples, or visible config behavior changes.
+Follow the existing Conventional Commit style: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, and `release:`. Keep subjects imperative and focused; issue refs such as `(#27)` are common. PRs should explain the user-visible effect, list verification commands, link the related issue, and call out any changes to the repository-root `VERSION` file that affect image versions or tags. Include screenshots only when terminal UX, docs examples, or visible config behavior changes.
 
 ## Security & Configuration Tips
 Never commit API keys or populated harness config. Keep flavor-specific secrets and auth state outside the repository, for example in your OpenCode config, `~/.claude`, or `~/.codex`, depending on the selected harness.

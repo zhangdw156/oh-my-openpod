@@ -63,13 +63,9 @@ oh-my-openpod/
 
 ## 版本管理
 
-仓库根目录 `VERSION` 文件是四个镜像唯一的版本真源：
+仓库根目录 `VERSION` 文件是四个镜像唯一的版本真源，格式为 `x.y.z.devN`（开发）或 `x.y.z`（正式发布）。
 
-```text
-0.4.0.dev5
-```
-
-`docker/<flavor>/docker-compose.yaml` 通过 `${IMAGE_VERSION:-local}` 消费这个版本；正式发布和开发版本切换都只修改 `VERSION`。
+`docker/<flavor>/docker-compose.yaml` 通过 `${IMAGE_VERSION:-local}` 消费这个版本。compose 本身不会自动读取 `VERSION`，因此在需要让本地 compose 构建的标签与中心版本一致时，应先执行 `IMAGE_VERSION="$(cat VERSION)"` 或导出该环境变量；未设置时 `IMAGE_VERSION` 默认为 `local`。
 
 | 版本格式 | 含义 |
 |----------|------|
