@@ -1,8 +1,19 @@
 services:
+  devpod:
+    build:
+      context: .
+      dockerfile: Dockerfile.devpod
+      network: host
+    image: oh-my-devpod:0.4.0.dev5
   openpod:
     build:
       context: .
+      dockerfile: Dockerfile.openpod
       network: host
+      additional_contexts:
+        devpod: service:devpod
+      args:
+        DEVPOD_BASE_IMAGE: devpod
     image: oh-my-openpod:0.4.0.dev5
     container_name: openpod
     stdin_open: true
@@ -13,5 +24,41 @@ services:
     env_file:
       - path: .env
         required: false
+    network_mode: host
+    restart: "no"
+  claudepod:
+    build:
+      context: .
+      dockerfile: Dockerfile.claudepod
+      network: host
+      additional_contexts:
+        devpod: service:devpod
+      args:
+        DEVPOD_BASE_IMAGE: devpod
+    image: oh-my-claudepod:0.4.0.dev5
+    container_name: claudepod
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    volumes:
+      - ${PROJECT_DIR:-.}:/workspace
+    network_mode: host
+    restart: "no"
+  codexpod:
+    build:
+      context: .
+      dockerfile: Dockerfile.codexpod
+      network: host
+      additional_contexts:
+        devpod: service:devpod
+      args:
+        DEVPOD_BASE_IMAGE: devpod
+    image: oh-my-codexpod:0.4.0.dev5
+    container_name: codexpod
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    volumes:
+      - ${PROJECT_DIR:-.}:/workspace
     network_mode: host
     restart: "no"
