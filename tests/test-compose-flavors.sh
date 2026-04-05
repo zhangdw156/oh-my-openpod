@@ -17,3 +17,12 @@ for service in openpod claudepod codexpod; do
     fail "missing compose service: ${service}"
   fi
 done
+
+for dockerfile in \
+  "dockerfile: docker/openpod/Dockerfile" \
+  "dockerfile: docker/claudepod/Dockerfile" \
+  "dockerfile: docker/codexpod/Dockerfile"; do
+  if ! rg -q "${dockerfile}" "${tmp_out}"; then
+    fail "missing compose dockerfile path: ${dockerfile}"
+  fi
+done

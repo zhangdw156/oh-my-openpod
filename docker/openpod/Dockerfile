@@ -1,7 +1,4 @@
-# Compatibility wrapper for the OpenCode flavor.
-# Prefer Dockerfile.devpod plus docker/openpod/Dockerfile for multi-flavor workflows.
-
-ARG DEVPOD_BASE_IMAGE=oh-my-devpod:0.4.0.dev5
+ARG DEVPOD_BASE_IMAGE=devpod
 FROM ${DEVPOD_BASE_IMAGE}
 
 COPY --from=ghcr.io/anomalyco/opencode /usr/local/bin/opencode /usr/local/bin/opencode

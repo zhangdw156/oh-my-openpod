@@ -110,7 +110,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.openpod
+          file: docker/openpod/Dockerfile
           build-args: |
             DEVPOD_BASE_IMAGE=${{ steps.version.outputs.base_image_name }}:${{ steps.version.outputs.version }}
           push: true
@@ -124,7 +124,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.claudepod
+          file: docker/claudepod/Dockerfile
           build-args: |
             DEVPOD_BASE_IMAGE=${{ steps.version.outputs.base_image_name }}:${{ steps.version.outputs.version }}
           push: true
@@ -138,7 +138,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Dockerfile.codexpod
+          file: docker/codexpod/Dockerfile
           build-args: |
             DEVPOD_BASE_IMAGE=${{ steps.version.outputs.base_image_name }}:${{ steps.version.outputs.version }}
           push: true
