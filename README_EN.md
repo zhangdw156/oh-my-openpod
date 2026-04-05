@@ -2,10 +2,10 @@
   <img src="https://img.shields.io/badge/Ubuntu-24.04-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu 24.04"/>
   <img src="https://img.shields.io/badge/Multi-Flavor_Devpod-2496ED?style=for-the-badge" alt="Multi Flavor Devpod"/>
   <img src="https://img.shields.io/badge/Zsh-Powerlevel10k-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white" alt="Zsh"/>
-  <img src="https://img.shields.io/github/v/tag/zhangdw156/oh-my-openpod?style=for-the-badge&label=version&color=blue" alt="Version"/>
+  <img src="https://img.shields.io/github/v/tag/zhangdw156/oh-my-devpod?style=for-the-badge&label=version&color=blue" alt="Version"/>
 </p>
 
-<h1 align="center">oh-my-openpod</h1>
+<h1 align="center">oh-my-devpod</h1>
 
 <p align="center">
   <strong>One main branch, multiple AI harness images</strong><br/>
@@ -45,21 +45,21 @@ The flavors differ only in:
 ### `openpod`
 
 - Harness: OpenCode
-- Image: `oh-my-openpod`
+- Image: `openpod`
 - Default bootstrap prefix: `~/.local/openpod`
 - Config model: user-managed project `opencode.json` or user-managed OpenCode config directories
 
 ### `claudepod`
 
 - Harness: Claude Code
-- Image: `oh-my-claudepod`
+- Image: `claudepod`
 - Default bootstrap prefix: `~/.local/claudepod`
 - Config model: `claude auth login`, `~/.claude/`, project-local `.claude/`
 
 ### `codexpod`
 
 - Harness: Codex CLI
-- Image: `oh-my-codexpod`
+- Image: `codexpod`
 - Default bootstrap prefix: `~/.local/codexpod`
 - Config model: `codex login`, `~/.codex/`, project-local Codex config
 
@@ -73,7 +73,7 @@ docker compose -f docker/claudepod/docker-compose.yaml build devpod claudepod
 docker compose -f docker/codexpod/docker-compose.yaml build devpod codexpod
 ```
 
-After building, the resulting images are tagged via `${IMAGE_VERSION:-local}`, e.g. `oh-my-openpod:${IMAGE_VERSION:-local}`. To make the local compose-built tags match the value stored in the repository-root `VERSION` file, prefix the compose commands with `IMAGE_VERSION="$(tr -d '\r' < VERSION)"` or export `IMAGE_VERSION` beforehand using the same value; without that, the default tag is `local`.
+After building, the resulting images are tagged via `${IMAGE_VERSION:-local}`, e.g. `openpod:${IMAGE_VERSION:-local}`. To make the local compose-built tags match the value stored in the repository-root `VERSION` file, prefix the compose commands with `IMAGE_VERSION="$(tr -d '\r' < VERSION)"` or export `IMAGE_VERSION` beforehand using the same value; without that, the default tag is `local`.
 
 The repository-root `VERSION` file is the shared source of truth for all four image tags; pod-local compose files only consume it through `${IMAGE_VERSION:-local}` and do not persist release version numbers.
 
@@ -98,10 +98,10 @@ docker compose -f docker/codexpod/docker-compose.yaml run --rm -it codexpod
 If you do not want to use compose, you can build the three pod images directly:
 
 ```bash
-docker build -f Dockerfile.devpod -t oh-my-devpod:local .
-docker build -f docker/openpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-openpod:local .
-docker build -f docker/claudepod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-claudepod:local .
-docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-codexpod:local .
+docker build -f Dockerfile.devpod -t devpod:local .
+docker build -f docker/openpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=devpod:local -t openpod:local .
+docker build -f docker/claudepod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=devpod:local -t claudepod:local .
+docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=devpod:local -t codexpod:local .
 ```
 
 ### Use the images directly
@@ -109,17 +109,17 @@ docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-d
 If the images already exist, you can run them without compose:
 
 ```bash
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace oh-my-openpod:local
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace oh-my-claudepod:local
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace oh-my-codexpod:local
+docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace openpod:local
+docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace claudepod:local
+docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace codexpod:local
 ```
 
 Direct command examples:
 
 ```bash
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace oh-my-openpod:local opencode --version
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace oh-my-claudepod:local claude --version
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace oh-my-codexpod:local codex --help
+docker run --rm --network host -v "$PWD:/workspace" -w /workspace openpod:local opencode --version
+docker run --rm --network host -v "$PWD:/workspace" -w /workspace claudepod:local claude --version
+docker run --rm --network host -v "$PWD:/workspace" -w /workspace codexpod:local codex --help
 ```
 
 ## Bootstrap Usage
@@ -162,7 +162,7 @@ codexpod-shell
 ## Repository Layout
 
 ```text
-oh-my-openpod/
+oh-my-devpod/
 ├── Dockerfile.devpod
 ├── docker/
 │   ├── openpod/

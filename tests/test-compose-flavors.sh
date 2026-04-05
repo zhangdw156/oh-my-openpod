@@ -20,7 +20,7 @@ version="${version#"${version%%[![:space:]]*}"}"
 [[ -n "${version}" ]] || fail "VERSION file should not be empty"
 
 make_temp_file() {
-  mktemp 2>/dev/null || mktemp -t oh-my-openpod.compose.XXXXXX
+  mktemp 2>/dev/null || mktemp -t devpod.compose.XXXXXX
 }
 
 check_compose() {
@@ -29,18 +29,18 @@ check_compose() {
   local tmp_out
 
   [[ -f "${compose_file}" ]] || fail "missing compose file: ${compose_file}"
-  rg -q 'image:[[:space:]]*oh-my-devpod:\$\{IMAGE_VERSION:-local\}' "${compose_file}" \
+  rg -q 'image:[[:space:]]*devpod:\$\{IMAGE_VERSION:-local\}' "${compose_file}" \
     || fail "compose should use IMAGE_VERSION for devpod in ${compose_file}"
-  flavor_pattern='image:[[:space:]]*oh-my-'
+  flavor_pattern='image:[[:space:]]*'
   flavor_pattern+="${flavor}"
   flavor_pattern+=':\$\{IMAGE_VERSION:-local\}'
   rg -q "${flavor_pattern}" "${compose_file}" \
     || fail "compose should use IMAGE_VERSION for ${flavor} in ${compose_file}"
-  if rg -q -F "image: oh-my-devpod:${version}" "${compose_file}" \
-    || rg -q -F "image: oh-my-${flavor}:${version}" "${compose_file}"; then
+  if rg -q -F "image: devpod:${version}" "${compose_file}" \
+    || rg -q -F "image: ${flavor}:${version}" "${compose_file}"; then
     fail "compose should not hard-code ${version} in ${compose_file}"
   fi
-  if rg -q 'image:[[:space:]]*oh-my-(devpod|openpod|claudepod|codexpod):[0-9]' "${compose_file}"; then
+  if rg -q 'image:[[:space:]]*(devpod|openpod|claudepod|codexpod):[0-9]' "${compose_file}"; then
     fail "compose should not hard-code numeric image tags in ${compose_file}"
   fi
 
@@ -63,10 +63,10 @@ check_compose() {
     fi
   done
 
-  if ! rg -q -F 'image: oh-my-devpod:test-version' "${tmp_out}"; then
+  if ! rg -q -F 'image: devpod:test-version' "${tmp_out}"; then
     fail "compose should render IMAGE_VERSION for devpod in ${compose_file}"
   fi
-  if ! rg -q -F "image: oh-my-${flavor}:test-version" "${tmp_out}"; then
+  if ! rg -q -F "image: ${flavor}:test-version" "${tmp_out}"; then
     fail "compose should render IMAGE_VERSION for ${flavor} in ${compose_file}"
   fi
 
