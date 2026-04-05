@@ -12,15 +12,21 @@ fail() {
 [[ -f "${repo_root}/VERSION" ]] || fail "missing VERSION file"
 [[ -f "${workflow}" ]] || fail "missing publish workflow"
 
-version_pattern=$(cat <<'EOF'
-version="$(tr -d '\n' < VERSION)"
+mapfile_pattern=$(cat <<'EOF'
+mapfile -t version_lines < <(tr -d '\r' < VERSION)
 EOF
 )
-rg -q --fixed-strings "${version_pattern}" "${workflow}" \
+rg -q --fixed-strings "${mapfile_pattern}" "${workflow}" \
   || fail "publish workflow should read VERSION"
+version_line_pattern=$(cat <<'EOF'
+version="${version_lines[0]:-}"
+EOF
+)
+rg -q --fixed-strings "${version_line_pattern}" "${workflow}" \
+  || fail "publish workflow should derive the version variable from VERSION"
 rg -q 'echo "version=\$version" >> "\$GITHUB_OUTPUT"' "${workflow}" \
   || fail "publish workflow should export version from VERSION"
 
-if rg -q 'extract_tag|docker/openpod/docker-compose.yaml:oh-my-openpod|docker/claudepod/docker-compose.yaml:oh-my-claudepod|docker/codexpod/docker-compose.yaml:oh-my-codexpod' "${workflow}"; then
-  fail "publish workflow should not parse compose files for version tags"
+if rg -q --fixed-strings 'docker-compose.yaml' "${workflow}"; then
+  fail "publish workflow should not inspect compose files for version tags"
 fi
