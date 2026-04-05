@@ -19,6 +19,10 @@ version="${version%"${version##*[![:space:]]}"}"
 version="${version#"${version%%[![:space:]]*}"}"
 [[ -n "${version}" ]] || fail "VERSION file should not be empty"
 
+make_temp_file() {
+  mktemp 2>/dev/null || mktemp -t oh-my-openpod.compose.XXXXXX
+}
+
 check_compose() {
   local flavor="$1"
   local compose_file="${repo_root}/docker/${flavor}/docker-compose.yaml"
@@ -32,16 +36,17 @@ check_compose() {
   flavor_pattern+=':\$\{IMAGE_VERSION:-local\}'
   rg -q "${flavor_pattern}" "${compose_file}" \
     || fail "compose should use IMAGE_VERSION for ${flavor} in ${compose_file}"
-  if rg -q "image:[[:space:]]*oh-my-(devpod|${flavor}):${version}" "${compose_file}"; then
+  if rg -q -F "image: oh-my-devpod:${version}" "${compose_file}" \
+    || rg -q -F "image: oh-my-${flavor}:${version}" "${compose_file}"; then
     fail "compose should not hard-code ${version} in ${compose_file}"
   fi
   if rg -q 'image:[[:space:]]*oh-my-(devpod|openpod|claudepod|codexpod):[0-9]' "${compose_file}"; then
     fail "compose should not hard-code numeric image tags in ${compose_file}"
   fi
 
-  tmp_out="$(mktemp)"
+  tmp_out="$(make_temp_file)"
   cleanup_tmp() { [[ -n "${tmp_out:-}" ]] && rm -f "${tmp_out}"; }
-  trap cleanup_tmp EXIT
+  trap cleanup_tmp RETURN
   IMAGE_VERSION=test-version docker compose -f "${compose_file}" config > "${tmp_out}"
 
   for service in devpod "${flavor}"; do
@@ -69,7 +74,7 @@ check_compose() {
     fail "compose should not define env_file entries in ${compose_file}"
   fi
   cleanup_tmp
-  trap - EXIT
+  trap - RETURN
 }
 
 for flavor in openpod claudepod codexpod; do
