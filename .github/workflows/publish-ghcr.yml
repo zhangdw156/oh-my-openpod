@@ -52,10 +52,10 @@ jobs:
           fi
 
           owner="${GITHUB_REPOSITORY_OWNER,,}"
-          base_image_name="ghcr.io/${owner}/oh-my-devpod"
-          openpod_image_name="ghcr.io/${owner}/oh-my-openpod"
-          claudepod_image_name="ghcr.io/${owner}/oh-my-claudepod"
-          codexpod_image_name="ghcr.io/${owner}/oh-my-codexpod"
+          base_image_name="ghcr.io/${owner}/devpod"
+          openpod_image_name="ghcr.io/${owner}/openpod"
+          claudepod_image_name="ghcr.io/${owner}/claudepod"
+          codexpod_image_name="ghcr.io/${owner}/codexpod"
 
           publish="true"
           if [[ "$version" =~ \.dev[0-9]+$ ]]; then
@@ -99,7 +99,7 @@ jobs:
             type=raw,value=latest
           labels: |
             org.opencontainers.image.title=${{ github.event.repository.name }}
-            org.opencontainers.image.description=oh-my-openpod container image
+            org.opencontainers.image.description=oh-my-devpod container image family
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ steps.version.outputs.version }}

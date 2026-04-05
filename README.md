@@ -2,10 +2,10 @@
   <img src="https://img.shields.io/badge/Ubuntu-24.04-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu 24.04"/>
   <img src="https://img.shields.io/badge/Multi-Flavor_Devpod-2496ED?style=for-the-badge" alt="Multi Flavor Devpod"/>
   <img src="https://img.shields.io/badge/Zsh-Powerlevel10k-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white" alt="Zsh"/>
-  <img src="https://img.shields.io/github/v/tag/zhangdw156/oh-my-openpod?style=for-the-badge&label=version&color=blue" alt="Version"/>
+  <img src="https://img.shields.io/github/v/tag/zhangdw156/oh-my-devpod?style=for-the-badge&label=version&color=blue" alt="Version"/>
 </p>
 
-<h1 align="center">oh-my-openpod</h1>
+<h1 align="center">oh-my-devpod</h1>
 
 <p align="center">
   <strong>一个 main，多个 AI harness 镜像</strong><br/>
@@ -45,21 +45,21 @@
 ### `openpod`
 
 - Harness: OpenCode
-- 镜像名：`oh-my-openpod`
+- 镜像名：`openpod`
 - bootstrap 前缀默认值：`~/.local/openpod`
 - 认证/配置：沿用 OpenCode 模型；用户自行维护项目根 `opencode.json` 或自己的 OpenCode 配置目录
 
 ### `claudepod`
 
 - Harness: Claude Code
-- 镜像名：`oh-my-claudepod`
+- 镜像名：`claudepod`
 - bootstrap 前缀默认值：`~/.local/claudepod`
 - 认证/配置：使用 `claude auth login`、`~/.claude/`、项目内 `.claude/`
 
 ### `codexpod`
 
 - Harness: Codex CLI
-- 镜像名：`oh-my-codexpod`
+- 镜像名：`codexpod`
 - bootstrap 前缀默认值：`~/.local/codexpod`
 - 认证/配置：使用 `codex login`、`~/.codex/`、项目内 Codex 配置
 
@@ -73,7 +73,7 @@ docker compose -f docker/claudepod/docker-compose.yaml build devpod claudepod
 docker compose -f docker/codexpod/docker-compose.yaml build devpod codexpod
 ```
 
-构建完成后，镜像会根据 `${IMAGE_VERSION:-local}` 进行打标，例如 `oh-my-openpod:${IMAGE_VERSION:-local}`。为了让本地 compose 构建的标签与仓库根的 `VERSION` 一致，应使用 `IMAGE_VERSION="$(tr -d '\r' < VERSION)" docker compose ...` 这种前缀写法，或先执行 `export IMAGE_VERSION="$(tr -d '\r' < VERSION)"` 再运行 compose；未设置时默认使用 `local`。
+构建完成后，镜像会根据 `${IMAGE_VERSION:-local}` 进行打标，例如 `openpod:${IMAGE_VERSION:-local}`。为了让本地 compose 构建的标签与仓库根的 `VERSION` 一致，应使用 `IMAGE_VERSION="$(tr -d '\r' < VERSION)" docker compose ...` 这种前缀写法，或先执行 `export IMAGE_VERSION="$(tr -d '\r' < VERSION)"` 再运行 compose；未设置时默认使用 `local`。
 
 仓库根目录 `VERSION` 是四个镜像共享的版本真源；pod-local compose 文件通过 `${IMAGE_VERSION:-local}` 消费它，默认仅产出 `local` 标签并不在 compose 中保存发布版本号。
 
@@ -98,10 +98,10 @@ docker compose -f docker/codexpod/docker-compose.yaml run --rm -it codexpod
 如果你不想走 compose，也可以直接分别构造 3 个 pod 镜像：
 
 ```bash
-docker build -f Dockerfile.devpod -t oh-my-devpod:local .
-docker build -f docker/openpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-openpod:local .
-docker build -f docker/claudepod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-claudepod:local .
-docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-devpod:local -t oh-my-codexpod:local .
+docker build -f Dockerfile.devpod -t devpod:local .
+docker build -f docker/openpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=devpod:local -t openpod:local .
+docker build -f docker/claudepod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=devpod:local -t claudepod:local .
+docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=devpod:local -t codexpod:local .
 ```
 
 ### 直接使用镜像
@@ -109,17 +109,17 @@ docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=oh-my-d
 如果镜像已经构建好，也可以不经过 compose，直接运行镜像：
 
 ```bash
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace oh-my-openpod:local
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace oh-my-claudepod:local
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace oh-my-codexpod:local
+docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace openpod:local
+docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace claudepod:local
+docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace codexpod:local
 ```
 
 直接执行主命令示例：
 
 ```bash
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace oh-my-openpod:local opencode --version
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace oh-my-claudepod:local claude --version
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace oh-my-codexpod:local codex --help
+docker run --rm --network host -v "$PWD:/workspace" -w /workspace openpod:local opencode --version
+docker run --rm --network host -v "$PWD:/workspace" -w /workspace claudepod:local claude --version
+docker run --rm --network host -v "$PWD:/workspace" -w /workspace codexpod:local codex --help
 ```
 
 ## Bootstrap 用法
@@ -162,7 +162,7 @@ codexpod-shell
 ## 项目结构
 
 ```text
-oh-my-openpod/
+oh-my-devpod/
 ├── Dockerfile.devpod
 ├── docker/
 │   ├── openpod/
