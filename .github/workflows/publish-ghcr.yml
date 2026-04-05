@@ -58,7 +58,7 @@ jobs:
           codexpod_image_name="ghcr.io/${owner}/oh-my-codexpod"
 
           publish="true"
-          if [[ "$version" == *-dev || "$version" =~ \.dev[0-9]+$ ]]; then
+          if [[ "$version" =~ [-.]dev[0-9]*$ ]]; then
             publish="false"
           fi
 
