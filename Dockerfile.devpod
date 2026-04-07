@@ -36,6 +36,7 @@ RUN bash /tmp/install-python-dev-tools.sh && rm -f /tmp/install-python-dev-tools
 COPY config/nvim /opt/devpod-config/nvim
 COPY build/install-lazyvim.sh /tmp/install-lazyvim.sh
 RUN OPENPOD_NVM_OVERLAY_DIR=/opt/devpod-config/nvim bash /tmp/install-lazyvim.sh && rm -f /tmp/install-lazyvim.sh
+RUN nvim --headless "+Lazy! sync" +qa
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
