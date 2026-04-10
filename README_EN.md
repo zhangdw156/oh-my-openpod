@@ -109,17 +109,19 @@ docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=devpod:
 If the images already exist, you can run them without compose:
 
 ```bash
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace openpod:local
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace claudepod:local
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace codexpod:local
+docker run --rm -it --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace openpod:local
+docker run --rm -it --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace claudepod:local
+docker run --rm -it --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace codexpod:local
 ```
+
+> **Note:** Always include `--user "$(id -u):$(id -g)"` to run the container as your host user. Without it, the container runs as root and changes file ownership under the mounted workspace, making them inaccessible on the host.
 
 Direct command examples:
 
 ```bash
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace openpod:local opencode --version
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace claudepod:local claude --version
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace codexpod:local codex --help
+docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace openpod:local opencode --version
+docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace claudepod:local claude --version
+docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace codexpod:local codex --help
 ```
 
 ## Bootstrap Usage
