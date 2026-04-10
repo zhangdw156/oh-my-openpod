@@ -59,5 +59,7 @@ RUN if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; the
 RUN git config --global --add safe.directory /workspace
 COPY config/.zshrc /root/.zshrc
 COPY config/.p10k.zsh /root/.p10k.zsh
+COPY config/entrypoint.sh /opt/devpod-entrypoint.sh
 WORKDIR /workspace
-ENTRYPOINT ["/bin/zsh"]
+ENTRYPOINT ["/opt/devpod-entrypoint.sh"]
+CMD ["/bin/zsh"]
