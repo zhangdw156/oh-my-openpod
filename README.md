@@ -109,17 +109,19 @@ docker build -f docker/codexpod/Dockerfile --build-arg DEVPOD_BASE_IMAGE=devpod:
 如果镜像已经构建好，也可以不经过 compose，直接运行镜像：
 
 ```bash
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace openpod:local
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace claudepod:local
-docker run --rm -it --network host -v "$PWD:/workspace" -w /workspace codexpod:local
+docker run --rm -it --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace openpod:local
+docker run --rm -it --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace claudepod:local
+docker run --rm -it --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace codexpod:local
 ```
+
+> **注意：** 必须加 `--user "$(id -u):$(id -g)"`，否则容器以 root 运行，会把挂载的项目文件改为 root 所有，导致宿主机上无法正常操作。
 
 直接执行主命令示例：
 
 ```bash
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace openpod:local opencode --version
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace claudepod:local claude --version
-docker run --rm --network host -v "$PWD:/workspace" -w /workspace codexpod:local codex --help
+docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace openpod:local opencode --version
+docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace claudepod:local claude --version
+docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace codexpod:local codex --help
 ```
 
 ## Bootstrap 用法

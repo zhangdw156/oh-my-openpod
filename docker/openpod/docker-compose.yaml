@@ -16,6 +16,7 @@ services:
         DEVPOD_BASE_IMAGE: devpod
     image: openpod:${IMAGE_VERSION:-local}
     container_name: openpod
+    user: "${UID:-1000}:${GID:-1000}"
     stdin_open: true
     tty: true
     working_dir: /workspace

@@ -18,9 +18,9 @@ The repository vendors shared shell/editor/build assets under `vendor/`, and the
 
 ```bash
 docker compose -f docker/openpod/docker-compose.yaml build devpod openpod
-docker compose -f docker/openpod/docker-compose.yaml run --rm openpod -lc 'opencode --version'
-docker compose -f docker/claudepod/docker-compose.yaml run --rm claudepod -lc 'claude --version && claude auth status'
-docker compose -f docker/codexpod/docker-compose.yaml run --rm codexpod -lc 'codex --help | sed -n "1,20p"'
+docker compose -f docker/openpod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" openpod -lc 'opencode --version'
+docker compose -f docker/claudepod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" claudepod -lc 'claude --version && claude auth status'
+docker compose -f docker/codexpod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" codexpod -lc 'codex --help | sed -n "1,20p"'
 ```
 
 ### Bootstrap a local flavor without Docker

@@ -5,9 +5,9 @@
 
 ## Build, Test, and Development Commands
 `docker compose -f docker/openpod/docker-compose.yaml build devpod openpod` builds the OpenCode flavor.  
-`docker compose -f docker/openpod/docker-compose.yaml run --rm openpod -lc 'opencode --version'` smoke-tests the OpenCode flavor.  
-`docker compose -f docker/claudepod/docker-compose.yaml run --rm claudepod -lc 'claude --version && claude auth status'` smoke-tests the Claude Code flavor.  
-`docker compose -f docker/codexpod/docker-compose.yaml run --rm codexpod -lc 'codex --help | sed -n "1,20p"'` smoke-tests the Codex flavor.  
+`docker compose -f docker/openpod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" openpod -lc 'opencode --version'` smoke-tests the OpenCode flavor.  
+`docker compose -f docker/claudepod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" claudepod -lc 'claude --version && claude auth status'` smoke-tests the Claude Code flavor.  
+`docker compose -f docker/codexpod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" codexpod -lc 'codex --help | sed -n "1,20p"'` smoke-tests the Codex flavor.  
 `bash install/bootstrap.sh --flavor <flavor> --user` bootstraps one flavor without Docker.  
 `bash build/update-vendor-assets.sh` refreshes shared vendored assets and synchronized flavor skills.
 
