@@ -55,6 +55,12 @@ if [[ "$(id -u)" -ne 0 ]]; then
   # codexpod
   _init_copy .codex
 
+  # copilotpod
+  _init_copy .copilot
+
+  # geminipod
+  _init_copy .gemini
+
   # Ensure $HOME/.local/bin is on PATH (claudepod puts binaries there)
   case ":${PATH}:" in
     *":${HOME}/.local/bin:"*) ;;

@@ -56,6 +56,8 @@ jobs:
           openpod_image_name="ghcr.io/${owner}/openpod"
           claudepod_image_name="ghcr.io/${owner}/claudepod"
           codexpod_image_name="ghcr.io/${owner}/codexpod"
+          copilotpod_image_name="ghcr.io/${owner}/copilotpod"
+          geminipod_image_name="ghcr.io/${owner}/geminipod"
 
           publish="true"
           if [[ "$version" =~ \.dev[0-9]+$ ]]; then
@@ -67,6 +69,8 @@ jobs:
           echo "openpod_image_name=$openpod_image_name" >> "$GITHUB_OUTPUT"
           echo "claudepod_image_name=$claudepod_image_name" >> "$GITHUB_OUTPUT"
           echo "codexpod_image_name=$codexpod_image_name" >> "$GITHUB_OUTPUT"
+          echo "copilotpod_image_name=$copilotpod_image_name" >> "$GITHUB_OUTPUT"
+          echo "geminipod_image_name=$geminipod_image_name" >> "$GITHUB_OUTPUT"
           echo "publish=$publish" >> "$GITHUB_OUTPUT"
 
       - name: Skip dev image versions
@@ -159,6 +163,34 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Build and push copilotpod image
+        if: steps.version.outputs.publish == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/copilotpod/Dockerfile
+          build-args: |
+            DEVPOD_BASE_IMAGE=${{ steps.version.outputs.base_image_name }}:${{ steps.version.outputs.version }}
+          push: true
+          provenance: false
+          tags: ${{ steps.version.outputs.copilotpod_image_name }}:${{ steps.version.outputs.version }},${{ steps.version.outputs.copilotpod_image_name }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push geminipod image
+        if: steps.version.outputs.publish == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/geminipod/Dockerfile
+          build-args: |
+            DEVPOD_BASE_IMAGE=${{ steps.version.outputs.base_image_name }}:${{ steps.version.outputs.version }}
+          push: true
+          provenance: false
+          tags: ${{ steps.version.outputs.geminipod_image_name }}:${{ steps.version.outputs.version }},${{ steps.version.outputs.geminipod_image_name }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Write workflow summary
         if: always()
         shell: bash
@@ -174,11 +206,15 @@ jobs:
             echo "- \`${OPENPOD_IMAGE}:${VERSION}\`"
             echo "- \`${CLAUDEPOD_IMAGE}:${VERSION}\`"
             echo "- \`${CODEXPOD_IMAGE}:${VERSION}\`"
+            echo "- \`${COPILOTPOD_IMAGE}:${VERSION}\`"
+            echo "- \`${GEMINIPOD_IMAGE}:${VERSION}\`"
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           BASE_IMAGE: ${{ steps.version.outputs.base_image_name }}
           OPENPOD_IMAGE: ${{ steps.version.outputs.openpod_image_name }}
           CLAUDEPOD_IMAGE: ${{ steps.version.outputs.claudepod_image_name }}
           CODEXPOD_IMAGE: ${{ steps.version.outputs.codexpod_image_name }}
+          COPILOTPOD_IMAGE: ${{ steps.version.outputs.copilotpod_image_name }}
+          GEMINIPOD_IMAGE: ${{ steps.version.outputs.geminipod_image_name }}
           PUBLISH: ${{ steps.version.outputs.publish }}
           VERSION: ${{ steps.version.outputs.version }}

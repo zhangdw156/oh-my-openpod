@@ -9,6 +9,8 @@ This file provides guidance to Claude Code when working with code in this reposi
 - `openpod` for OpenCode
 - `claudepod` for Claude Code
 - `codexpod` for Codex
+- `copilotpod` for GitHub Copilot CLI
+- `geminipod` for Gemini CLI
 
 The repository vendors shared shell/editor/build assets under `vendor/`, and the `openpod` flavor owns its OpenCode-specific vendored assets under `runtime/openpod/vendor/opencode/`.
 
@@ -21,6 +23,8 @@ docker compose -f docker/openpod/docker-compose.yaml build devpod openpod
 docker compose -f docker/openpod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" openpod -lc 'opencode --version'
 docker compose -f docker/claudepod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" claudepod -lc 'claude --version && claude auth status'
 docker compose -f docker/codexpod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" codexpod -lc 'codex --help | sed -n "1,20p"'
+docker compose -f docker/copilotpod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" copilotpod -lc 'copilot --version'
+docker compose -f docker/geminipod/docker-compose.yaml run --rm --user "$(id -u):$(id -g)" geminipod -lc 'gemini --version'
 ```
 
 ### Bootstrap a local flavor without Docker
@@ -29,6 +33,8 @@ docker compose -f docker/codexpod/docker-compose.yaml run --rm --user "$(id -u):
 bash install/bootstrap.sh --flavor openpod --user
 bash install/bootstrap.sh --flavor claudepod --user
 bash install/bootstrap.sh --flavor codexpod --user
+bash install/bootstrap.sh --flavor copilotpod --user
+bash install/bootstrap.sh --flavor geminipod --user
 ```
 
 ### Refresh vendored assets
@@ -63,7 +69,7 @@ Release flow details live in `DEVELOPMENT.md`.
 ### 1. Shared base plus flavor runtimes
 
 - `Dockerfile.devpod` and `build/` own shared shell, editor, Python, and terminal tooling
-- `docker/openpod/Dockerfile`, `docker/claudepod/Dockerfile`, and `docker/codexpod/Dockerfile` only add harness-specific layers
+- `docker/openpod/Dockerfile`, `docker/claudepod/Dockerfile`, `docker/codexpod/Dockerfile`, `docker/copilotpod/Dockerfile`, and `docker/geminipod/Dockerfile` only add harness-specific layers
 - `runtime/<flavor>/` owns harness-specific launchers, config, installers, skills, and any flavor-specific vendored assets
 
 ### 2. Pod-local compose files are the local runtime contract
@@ -83,7 +89,7 @@ OpenCode-specific vendored assets live under:
 - `runtime/openpod/vendor/opencode/packages/`
 - `runtime/openpod/vendor/opencode/skills/`
 
-`build/update-vendor-assets.sh` refreshes both the shared vendor roots and the `openpod` OpenCode snapshot, then syncs `superpowers` skills into the Claude and Codex runtime trees.
+`build/update-vendor-assets.sh` refreshes both the shared vendor roots and the `openpod` OpenCode snapshot, then syncs `superpowers` skills into the Claude, Codex, Copilot, and Gemini runtime trees.
 
 ### 4. OpenCode plugin layout must stay intact
 

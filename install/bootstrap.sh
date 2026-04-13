@@ -9,12 +9,12 @@ prefix_explicit=0
 
 usage() {
   cat <<'EOF'
-Usage: bash install/bootstrap.sh [--flavor openpod|claudepod|codexpod] [--user] [--system] [--prefix PATH]
+Usage: bash install/bootstrap.sh [--flavor openpod|claudepod|codexpod|copilotpod|geminipod] [--user] [--system] [--prefix PATH]
 
 Bootstrap a pod-like environment on a Linux host or inside an existing container.
 
 Options:
-  --flavor NAME    Select the harness flavor: openpod, claudepod, or codexpod
+  --flavor NAME    Select the harness flavor: openpod, claudepod, codexpod, copilotpod, or geminipod
   --user           Install into a user-owned prefix (default)
   --system         Install into /opt/<flavor> with binaries under /usr/local/bin
   --prefix PATH    Override the installation prefix
@@ -68,6 +68,16 @@ case "${flavor}" in
     flavor_name="codexpod"
     default_config_home_user="${HOME}/.codex"
     default_config_home_system="/root/.codex"
+    ;;
+  copilotpod)
+    flavor_name="copilotpod"
+    default_config_home_user="${HOME}/.copilot"
+    default_config_home_system="/root/.copilot"
+    ;;
+  geminipod)
+    flavor_name="geminipod"
+    default_config_home_user="${HOME}/.gemini"
+    default_config_home_system="/root/.gemini"
     ;;
   *)
     echo "Unsupported flavor: ${flavor}" >&2
@@ -193,6 +203,8 @@ export OPENPOD_RUNTIME_VENDOR_HOME="${runtime_vendor_home}"
 export OPENPOD_SHELL_DIR="${shell_dir}"
 export OPENPOD_CLAUDE_REAL_BIN="${bin_dir}/claude-real"
 export OPENPOD_CODEX_REAL_BIN="${bin_dir}/codex-real"
+export OPENPOD_COPILOT_REAL_BIN="${bin_dir}/copilot-real"
+export OPENPOD_GEMINI_REAL_BIN="${bin_dir}/gemini-real"
 export PATH="${bin_dir}:\$PATH"
 export ZSH="${vendor_home}/zsh/ohmyzsh"
 export ZSH_DISABLE_COMPFIX=true
@@ -235,6 +247,8 @@ export OPENPOD_RUNTIME_VENDOR_HOME="${runtime_vendor_home}"
 export OPENPOD_SHELL_DIR="${shell_dir}"
 export OPENPOD_CLAUDE_REAL_BIN="${bin_dir}/claude-real"
 export OPENPOD_CODEX_REAL_BIN="${bin_dir}/codex-real"
+export OPENPOD_COPILOT_REAL_BIN="${bin_dir}/copilot-real"
+export OPENPOD_GEMINI_REAL_BIN="${bin_dir}/gemini-real"
 export PATH="${bin_dir}:\$PATH"
 export XDG_CONFIG_HOME="\${XDG_CONFIG_HOME:-${HOME}/.config}"
 export XDG_DATA_HOME="\${XDG_DATA_HOME:-${HOME}/.local/share}"

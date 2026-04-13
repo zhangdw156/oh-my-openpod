@@ -1,0 +1,26 @@
+services:
+  devpod:
+    build:
+      context: ../..
+      dockerfile: Dockerfile.devpod
+      network: host
+    image: devpod:${IMAGE_VERSION:-local}
+  copilotpod:
+    build:
+      context: ../..
+      dockerfile: docker/copilotpod/Dockerfile
+      network: host
+      additional_contexts:
+        devpod: service:devpod
+      args:
+        DEVPOD_BASE_IMAGE: devpod
+    image: copilotpod:${IMAGE_VERSION:-local}
+    container_name: copilotpod
+    user: "${UID:-1000}:${GID:-1000}"
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    volumes:
+      - ${PROJECT_DIR:-../..}:/workspace
+    network_mode: host
+    restart: "no"

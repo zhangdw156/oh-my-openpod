@@ -55,7 +55,7 @@ runtime/openpod/
         └── skills/
 ```
 
-`runtime/claudepod/skills/superpowers/` and `runtime/codexpod/skills/superpowers/` are synchronized copies of the same upstream `superpowers` skills snapshot, but they are flavor-owned trees rather than shared vendor roots.
+`runtime/claudepod/skills/superpowers/`, `runtime/codexpod/skills/superpowers/`, `runtime/copilotpod/skills/superpowers/`, and `runtime/geminipod/skills/superpowers/` are synchronized copies of the same upstream `superpowers` skills snapshot, but they are flavor-owned trees rather than shared vendor roots.
 
 ## Shared Release Assets
 
@@ -79,8 +79,10 @@ It then synchronizes the bundled `skills/` subtree into:
 
 - `runtime/claudepod/skills/superpowers/`
 - `runtime/codexpod/skills/superpowers/`
+- `runtime/copilotpod/skills/superpowers/`
+- `runtime/geminipod/skills/superpowers/`
 
-This keeps all three flavors aligned to the same upstream `superpowers` snapshot while preserving the ownership boundary that OpenCode-specific vendored assets belong to `openpod`.
+This keeps all five runtime flavors aligned to the same upstream `superpowers` snapshot while preserving the ownership boundary that OpenCode-specific vendored assets belong to `openpod`.
 
 ## Update Workflow
 
@@ -94,7 +96,7 @@ After running it:
 
 1. Review changes under `vendor/`
 2. Review changes under `runtime/openpod/vendor/opencode/`
-3. Review synchronized flavor skills under `runtime/claudepod/skills/` and `runtime/codexpod/skills/`
+3. Review synchronized flavor skills under `runtime/claudepod/skills/`, `runtime/codexpod/skills/`, `runtime/copilotpod/skills/`, and `runtime/geminipod/skills/`
 4. Update [`vendor/manifest.lock.json`](../vendor/manifest.lock.json) if versions or sources changed
 5. Rebuild the base and flavors:
 
@@ -102,6 +104,8 @@ After running it:
 docker compose -f docker/openpod/docker-compose.yaml build devpod openpod
 docker compose -f docker/claudepod/docker-compose.yaml build devpod claudepod
 docker compose -f docker/codexpod/docker-compose.yaml build devpod codexpod
+docker compose -f docker/copilotpod/docker-compose.yaml build devpod copilotpod
+docker compose -f docker/geminipod/docker-compose.yaml build devpod geminipod
 ```
 
 ## Notes

@@ -35,7 +35,9 @@ for step in \
   'Build and push devpod base image' \
   'Build and push openpod image' \
   'Build and push claudepod image' \
-  'Build and push codexpod image'; do
+  'Build and push codexpod image' \
+  'Build and push copilotpod image' \
+  'Build and push geminipod image'; do
   step_gate_pattern=$(cat <<EOF
       - name: ${step}
         if: steps.version.outputs.publish == 'true'

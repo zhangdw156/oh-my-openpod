@@ -40,7 +40,7 @@ check_compose() {
     || rg -q -F "image: ${flavor}:${version}" "${compose_file}"; then
     fail "compose should not hard-code ${version} in ${compose_file}"
   fi
-  if rg -q 'image:[[:space:]]*(devpod|openpod|claudepod|codexpod):[0-9]' "${compose_file}"; then
+  if rg -q 'image:[[:space:]]*(devpod|openpod|claudepod|codexpod|copilotpod|geminipod):[0-9]' "${compose_file}"; then
     fail "compose should not hard-code numeric image tags in ${compose_file}"
   fi
 
@@ -77,6 +77,6 @@ check_compose() {
   trap - RETURN
 }
 
-for flavor in openpod claudepod codexpod; do
+for flavor in openpod claudepod codexpod copilotpod geminipod; do
   check_compose "${flavor}"
 done

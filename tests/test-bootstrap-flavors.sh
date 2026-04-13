@@ -12,7 +12,7 @@ help_output="$(bash "${repo_root}/install/bootstrap.sh" --help)"
 bootstrap_script="${repo_root}/install/bootstrap.sh"
 
 printf '%s' "${help_output}" | rg -q -- '--flavor' || fail "bootstrap help missing --flavor"
-for flavor in openpod claudepod codexpod; do
+for flavor in openpod claudepod codexpod copilotpod geminipod; do
   printf '%s' "${help_output}" | rg -q -- "${flavor}" || fail "bootstrap help missing flavor ${flavor}"
 done
 

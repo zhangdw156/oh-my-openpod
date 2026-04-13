@@ -166,6 +166,16 @@
       "dockerfile": "Dockerfile.codexpod",
       "skills_source": "runtime/codexpod/skills",
       "notes": "Codex flavor installs @openai/codex and uses vendored superpowers skills copied into the flavor runtime tree."
+    },
+    "copilotpod": {
+      "dockerfile": "Dockerfile.copilotpod",
+      "skills_source": "runtime/copilotpod/skills",
+      "notes": "GitHub Copilot CLI flavor installs @github/copilot and uses vendored superpowers skills copied into the flavor runtime tree."
+    },
+    "geminipod": {
+      "dockerfile": "Dockerfile.geminipod",
+      "skills_source": "runtime/geminipod/skills",
+      "notes": "Gemini CLI flavor installs @google/gemini-cli and uses vendored superpowers skills copied into the flavor runtime tree."
     }
   }
 }

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+real_bin="${OPENPOD_GEMINI_REAL_BIN:-${OPENPOD_BIN_DIR:-/usr/local/bin}/gemini-real}"
+if [[ -z "${real_bin}" || ! -x "${real_bin}" ]]; then
+  echo "gemini real binary not found: ${real_bin:-unset}" >&2
+  exit 1
+fi
+
+exec "${real_bin}" "$@"

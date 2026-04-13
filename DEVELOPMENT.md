@@ -2,7 +2,7 @@
 
 ## 项目结构（完整）
 
-```
+```text
 oh-my-devpod/
 ├── Dockerfile.devpod
 ├── docker/
@@ -12,7 +12,13 @@ oh-my-devpod/
 │   ├── claudepod/
 │   │   ├── Dockerfile
 │   │   └── docker-compose.yaml
-│   └── codexpod/
+│   ├── codexpod/
+│   │   ├── Dockerfile
+│   │   └── docker-compose.yaml
+│   ├── copilotpod/
+│   │   ├── Dockerfile
+│   │   └── docker-compose.yaml
+│   └── geminipod/
 │       ├── Dockerfile
 │       └── docker-compose.yaml
 ├── .github/
@@ -23,6 +29,7 @@ oh-my-devpod/
 ├── build/
 │   ├── install-antidote.sh
 │   ├── install-btop.sh
+│   ├── install-claude-code.sh
 │   ├── install-lazyvim.sh
 │   ├── install-neovim.sh
 │   ├── install-python-dev-tools.sh
@@ -39,14 +46,17 @@ oh-my-devpod/
 │   │   └── vendor/
 │   │       └── opencode/       # openpod flavor 独占的 OpenCode vendored 资产
 │   ├── claudepod/
-│   └── codexpod/
+│   ├── codexpod/
+│   ├── copilotpod/
+│   └── geminipod/
 ├── tests/
 │   ├── run.sh
 │   ├── test-compose-flavors.sh
 │   ├── test-bootstrap-flavors.sh
 │   ├── test-install-lazyvim.sh
 │   ├── test-install-neovim.sh
-│   └── test-neovim-lazyvim-wiring.sh
+│   ├── test-neovim-lazyvim-wiring.sh
+│   └── test-openpod-runtime-assets.sh
 ├── config/
 │   ├── nvim/
 │   │   └── lua/plugins/python.lua
@@ -63,7 +73,7 @@ oh-my-devpod/
 
 ## 版本管理
 
-仓库根目录 `VERSION` 文件是四个镜像唯一的版本真源，格式为 `x.y.z.devN`（开发）或 `x.y.z`（正式发布）。
+仓库根目录 `VERSION` 文件是六个镜像唯一的版本真源，格式为 `x.y.z.devN`（开发）或 `x.y.z`（正式发布）。
 
 `docker/<flavor>/docker-compose.yaml` 通过 `${IMAGE_VERSION:-local}` 消费这个版本。compose 本身不会自动读取 `VERSION`，因此在需要让本地 compose 构建的标签与中心版本一致时，应使用 `IMAGE_VERSION="$(tr -d '\r' < VERSION)" docker compose ...` 这种前缀写法，或显式 `export IMAGE_VERSION="$(tr -d '\r' < VERSION)"` 后再运行 compose；未设置时 `IMAGE_VERSION` 默认为 `local`。
 
@@ -85,10 +95,11 @@ oh-my-devpod/
 - 正式版镜像由 `.github/workflows/publish-ghcr.yml` 在 `main` 分支自动发布
 - workflow 登录 GHCR 时使用内置的 `GITHUB_TOKEN`（job 已声明 `packages: write` 权限）
 - 发布镜像显式关闭 `provenance`，避免 GHCR 页面出现额外的 `unknown/unknown` attestation 条目
+- 发布产物包含共享 `devpod` 基座以及 `openpod`、`claudepod`、`codexpod`、`copilotpod`、`geminipod`
 
 ## 依赖安装约定
 
-- `build/` 目录存放镜像构建期使用的安装脚本，例如 `install-antidote.sh`、`install-btop.sh`、`install-neovim.sh`、`install-python-dev-tools.sh`、`install-lazyvim.sh`、`install-yazi.sh` 和 `install-zellij.sh`
+- `build/` 目录存放镜像构建期使用的安装脚本，例如 `install-antidote.sh`、`install-btop.sh`、`install-claude-code.sh`、`install-neovim.sh`、`install-python-dev-tools.sh`、`install-lazyvim.sh`、`install-yazi.sh` 和 `install-zellij.sh`
 - 这些安装脚本同时也是 bootstrap 模式的基础构件；新增脚本时优先保持可通过环境变量改写安装前缀与目标路径
 - `build/update-vendor-assets.sh` 用于刷新共享 release 包、LazyVim starter 快照、Zsh 插件快照，并同步 flavor 目录下复用的 skills
 - `config/` 目录只存放共享配置，例如 shell 配置和 `nvim` overlay
@@ -97,9 +108,10 @@ oh-my-devpod/
 - `config/nvim/` 存放仓库直接维护的 LazyVim overlay；用于在不修改 vendored starter 快照的前提下追加 openpod 默认行为
 - `runtime/openpod/vendor/opencode/packages/` 存放需要保留原始包结构的 OpenCode 插件包快照
 - `runtime/openpod/vendor/opencode/skills/` 预留给仓库直接维护的 OpenCode 全局 skills
+- `runtime/claudepod/skills/`、`runtime/codexpod/skills/`、`runtime/copilotpod/skills/`、`runtime/geminipod/skills/` 可承载从 OpenCode vendored superpowers 同步出的 flavor-owned skills
 - `tests/` 目录存放仓库维护的 shell 级回归测试；优先覆盖 flavor 编排、bootstrap 参数、安装脚本行为和关键接线关系
 - `vendor/manifest.lock.json` 和 `docs/vendor-assets.md` 一起维护本地资产的来源、版本、校验和与更新方式
-- 默认本地 `docker build` 不再依赖 GitHub release、Zsh 插件仓库或 OpenCode 插件仓库的运行时拉取，但仍需要访问基础镜像来源，例如 Docker Hub 和 GHCR
+- 默认本地 `docker build` 不再依赖 GitHub release、Zsh 插件仓库或 OpenCode 插件仓库的运行时拉取，但仍需要访问基础镜像来源，例如 Docker Hub 和 GHCR，以及未 vendored 的 harness 安装端点
 
 ### Neovim / LazyVim 资产约定
 
@@ -122,6 +134,14 @@ oh-my-devpod/
 - bootstrap 模式会把 `runtime/openpod/vendor/opencode/` 复制到 flavor 自己的安装前缀下，再由 `runtime/openpod/install-harness.sh` 完成 OpenCode 接线
 - `build/update-vendor-assets.sh` 会刷新 `runtime/openpod/vendor/opencode/packages/superpowers/`，但不会破坏 `runtime/openpod/vendor/opencode/skills/`
 - pod-local compose 文件不从宿主机挂载全局 OpenCode 配置；项目级自定义应放在挂载到 `/workspace` 的项目根目录 `opencode.json`
+
+### 其他 harness 约定
+
+- `codexpod` 使用 `@openai/codex`
+- `copilotpod` 使用 `@github/copilot`
+- `geminipod` 使用 `@google/gemini-cli`，要求 `Node.js >=20`
+- `copilotpod` 的用户级配置目录为 `~/.copilot/`，可通过 `GH_TOKEN` / `GITHUB_TOKEN` 提供非交互认证
+- `geminipod` 的用户级配置目录为 `~/.gemini/`，headless 场景优先使用 `GEMINI_API_KEY` 或 Vertex AI 相关环境变量
 
 ### Multi-Flavor 约定
 
@@ -148,6 +168,8 @@ git push -u origin release/x.y.z
 #    合并后，GitHub Actions 会自动构建并发布：
 #    ghcr.io/zhangdw156/openpod:x.y.z
 #    ghcr.io/zhangdw156/openpod:latest
+#    ghcr.io/zhangdw156/copilotpod:x.y.z
+#    ghcr.io/zhangdw156/geminipod:x.y.z
 
 # 4. 发布成功后，给 release commit 打 tag 并创建 GitHub Release
 git checkout main

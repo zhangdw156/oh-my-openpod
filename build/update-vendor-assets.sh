@@ -136,7 +136,7 @@ download_plugin_snapshot "obra/superpowers" "refs/tags/${superpowers_version}" "
 download_plugin_snapshot "LazyVim/starter" "${lazyvim_starter_commit}" "${vendor_dir}/nvim/lazyvim-starter"
 printf '%s\n' "${lazyvim_starter_commit}" > "${vendor_dir}/nvim/lazyvim-starter/.openpod-source-commit"
 
-for flavor in claudepod codexpod; do
+for flavor in claudepod codexpod copilotpod geminipod; do
   if [[ -d "${runtime_dir}/${flavor}/skills/superpowers" ]]; then
     rm -rf "${runtime_dir}/${flavor}/skills/superpowers"
   fi
