@@ -152,6 +152,24 @@ docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -
 docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace geminipod:local gemini --version
 ```
 
+## One-line Toolchain Install
+
+Run the following command on any Linux server to install the full devpod shared toolchain (no sudo required):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zhangdw156/oh-my-devpod/main/install/setup.sh | bash
+```
+
+The host only needs `bash`, `curl`, and `git`. The script installs Homebrew and manages all dependencies via brew:
+
+- **Search/Navigation**: bat, fd, fzf, ripgrep
+- **Editor**: neovim (LazyVim preset)
+- **Terminal**: zellij, yazi, btop, zsh
+- **Development**: gcc, make, node, npm, bun, uv, jq, sqlite
+- **Shell plugins**: oh-my-zsh, powerlevel10k, autosuggestions, history-substring-search, syntax-highlighting
+
+After installation, run `exec zsh` to enter the configured zsh environment.
+
 ## Bootstrap Usage
 
 Bootstrap only requires `bash`, `curl`, and `tar` on the host. It automatically installs Homebrew and manages all dependencies via brew (no sudo required).

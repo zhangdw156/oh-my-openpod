@@ -152,6 +152,24 @@ docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -
 docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -w /workspace geminipod:local gemini --version
 ```
 
+## 一键安装工具链
+
+在任意 Linux 服务器上运行以下命令，即可安装 devpod 全部共享工具链（无需 sudo）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zhangdw156/oh-my-devpod/main/install/setup.sh | bash
+```
+
+宿主机仅需预装 `bash`、`curl` 和 `git`。脚本会自动安装 Homebrew 并通过 brew 管理所有依赖：
+
+- **搜索/导航**: bat, fd, fzf, ripgrep
+- **编辑器**: neovim (LazyVim preset)
+- **终端**: zellij, yazi, btop, zsh
+- **开发**: gcc, make, node, npm, bun, uv, jq, sqlite
+- **Shell 插件**: oh-my-zsh, powerlevel10k, autosuggestions, history-substring-search, syntax-highlighting
+
+安装完成后运行 `exec zsh` 即可进入配置好的 zsh 环境。
+
 ## Bootstrap 用法
 
 Bootstrap 仅需宿主机有 `bash`、`curl` 和 `tar`，会自动安装 Homebrew 并通过 brew 管理所有依赖（无需 sudo）。
