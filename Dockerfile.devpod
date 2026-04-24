@@ -1,12 +1,15 @@
 FROM ubuntu:24.04 AS devpod-base
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    bat \
     bzip2 \
     curl \
     fd-find \
     file \
+    fzf \
     gcc \
     git \
+    jq \
     make \
     ripgrep \
     tzdata \
@@ -31,6 +34,9 @@ RUN bash /tmp/install-yazi.sh && rm -f /tmp/install-yazi.sh
 COPY build/install-neovim.sh /tmp/install-neovim.sh
 RUN bash /tmp/install-neovim.sh && rm -f /tmp/install-neovim.sh
 COPY --from=ghcr.io/astral-sh/uv:0.11.3 /uv /uvx /usr/local/bin/
+COPY --from=oven/bun:1.2 /usr/local/bin/bun /usr/local/bin/bun
+RUN ln -sf /usr/local/bin/bun /usr/local/bin/bunx
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm && rm -rf /var/lib/apt/lists/*
 COPY build/install-python-dev-tools.sh /tmp/install-python-dev-tools.sh
 RUN bash /tmp/install-python-dev-tools.sh && rm -f /tmp/install-python-dev-tools.sh
 
@@ -55,6 +61,7 @@ ENV TERM=xterm-256color
 ENV SHELL=/bin/zsh
 ENV UV_LINK_MODE=copy
 ENV TZ=UTC
+RUN if command -v batcat >/dev/null 2>&1 && ! command -v bat >/dev/null 2>&1; then ln -sf "$(command -v batcat)" /usr/local/bin/bat; fi
 RUN if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then ln -sf "$(command -v fdfind)" /usr/local/bin/fd; fi
 RUN git config --global --add safe.directory /workspace
 COPY config/.zshrc /root/.zshrc

@@ -99,22 +99,12 @@ if [[ "$(uname -s)" != "Linux" ]]; then
   exit 1
 fi
 
-if ! command -v dpkg >/dev/null 2>&1 || ! command -v dpkg-deb >/dev/null 2>&1; then
-  echo "bootstrap mode currently requires Debian/Ubuntu-style dpkg tools" >&2
-  exit 1
-fi
-
-for cmd in bash curl git tar sha256sum install zsh; do
+for cmd in bash curl tar; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "Missing required command: $cmd" >&2
     exit 1
   fi
 done
-
-if [[ "$mode" == "system" && "$(id -u)" -ne 0 ]]; then
-  echo "--system requires root privileges" >&2
-  exit 1
-fi
 
 bin_dir="${OPENPOD_BIN_DIR:-}"
 config_home="${OPENPOD_CONFIG_HOME:-}"
@@ -166,7 +156,6 @@ vendor_home="${prefix}/vendor"
 runtime_home="${prefix}/runtime/${flavor_name}"
 runtime_vendor_home="${runtime_home}/vendor"
 shell_dir="${prefix}/shell"
-asset_root="${repo_root}/vendor/releases"
 xdg_config_home="${HOME}/.config"
 xdg_data_home="${HOME}/.local/share"
 xdg_state_home="${HOME}/.local/state"
@@ -180,6 +169,48 @@ if [[ "$mode" == "system" ]]; then
 fi
 
 mkdir -p "${prefix}" "${bin_dir}" "${config_home}" "${data_home}" "${state_home}" "${cache_home}" "${shell_dir}"
+
+# ── Homebrew (Linuxbrew) ──────────────────────────────────────────────
+homebrew_prefix="${prefix}/opt/homebrew"
+if [[ ! -x "${homebrew_prefix}/bin/brew" ]]; then
+  echo "Installing Homebrew to ${homebrew_prefix}..."
+  mkdir -p "${homebrew_prefix}"
+  curl -fsSL https://github.com/Homebrew/brew/tarball/master \
+    | tar xz --strip-components 1 -C "${homebrew_prefix}"
+fi
+
+eval "$("${homebrew_prefix}/bin/brew" shellenv)"
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_INSTALL_CLEANUP=1
+
+brew tap oven-sh/bun
+
+brew_packages=(
+  antidote
+  bat
+  btop
+  fd
+  file-formula
+  fzf
+  gcc
+  git
+  jq
+  make
+  neovim
+  node
+  oven-sh/bun/bun
+  ripgrep
+  unzip
+  uv
+  vim
+  yazi
+  zellij
+  zsh
+)
+echo "Installing packages via Homebrew: ${brew_packages[*]}"
+brew install "${brew_packages[@]}"
+
+# ── Vendor assets (shell/editor configs) ──────────────────────────────
 rm -rf "${vendor_home}" "${runtime_home}"
 mkdir -p "${runtime_home}"
 cp -R "${repo_root}/vendor" "${vendor_home}"
@@ -205,6 +236,8 @@ export OPENPOD_CLAUDE_REAL_BIN="${bin_dir}/claude-real"
 export OPENPOD_CODEX_REAL_BIN="${bin_dir}/codex-real"
 export OPENPOD_COPILOT_REAL_BIN="${bin_dir}/copilot-real"
 export OPENPOD_GEMINI_REAL_BIN="${bin_dir}/gemini-real"
+export OPENPOD_HOMEBREW_PREFIX="${homebrew_prefix}"
+eval "\$(${homebrew_prefix}/bin/brew shellenv)"
 export PATH="${bin_dir}:\$PATH"
 export ZSH="${vendor_home}/zsh/ohmyzsh"
 export ZSH_DISABLE_COMPFIX=true
@@ -249,6 +282,8 @@ export OPENPOD_CLAUDE_REAL_BIN="${bin_dir}/claude-real"
 export OPENPOD_CODEX_REAL_BIN="${bin_dir}/codex-real"
 export OPENPOD_COPILOT_REAL_BIN="${bin_dir}/copilot-real"
 export OPENPOD_GEMINI_REAL_BIN="${bin_dir}/gemini-real"
+export OPENPOD_HOMEBREW_PREFIX="${homebrew_prefix}"
+eval "\$(${homebrew_prefix}/bin/brew shellenv)"
 export PATH="${bin_dir}:\$PATH"
 export XDG_CONFIG_HOME="\${XDG_CONFIG_HOME:-${HOME}/.config}"
 export XDG_DATA_HOME="\${XDG_DATA_HOME:-${HOME}/.local/share}"
@@ -259,12 +294,8 @@ EOF
 
 cp "${repo_root}/config/.p10k.zsh" "${shell_dir}/.p10k.zsh"
 
-export OPENPOD_ASSET_ROOT="${asset_root}"
 export OPENPOD_BIN_DIR="${bin_dir}"
 export OPENPOD_FLAVOR="${flavor_name}"
-export OPENPOD_BTOP_DIR="${prefix}/opt/btop"
-export OPENPOD_ANTIDOTE_DIR="${prefix}/opt/antidote"
-export OPENPOD_NEOVIM_DIR="${prefix}/opt/neovim"
 export OPENPOD_LAZYVIM_SOURCE_DIR="${vendor_home}/nvim/lazyvim-starter"
 export OPENPOD_LAZYVIM_STARTER_COMMIT="803bc181d7c0d6d5eeba9274d9be49b287294d99"
 export OPENPOD_NVM_CONFIG_DIR="${xdg_config_home}/nvim"
@@ -274,7 +305,7 @@ export OPENPOD_NVM_CACHE_DIR="${xdg_cache_home}/nvim"
 export OPENPOD_NVM_OVERLAY_DIR="${repo_root}/config/nvim"
 export OPENPOD_PYRIGHT_VERSION="1.1.408"
 export OPENPOD_RUFF_VERSION="0.15.9"
-export OPENPOD_UV_BIN="${bin_dir}/uv"
+export OPENPOD_UV_BIN="${homebrew_prefix}/bin/uv"
 export OPENPOD_UV_TOOL_DIR="${prefix}/opt/uv-tools"
 export OPENPOD_REPO_ROOT="${repo_root}"
 export OPENPOD_VENDOR_HOME="${vendor_home}"
@@ -284,29 +315,8 @@ export OPENPOD_CONFIG_HOME="${config_home}"
 export OPENPOD_PREFIX="${prefix}"
 export OPENPOD_SHELL_DIR="${shell_dir}"
 
-bash "${repo_root}/build/install-btop.sh"
-bash "${repo_root}/build/install-antidote.sh"
-bash "${repo_root}/build/install-zellij.sh"
-bash "${repo_root}/build/install-yazi.sh"
-bash "${repo_root}/build/install-neovim.sh"
-
-if command -v fdfind >/dev/null 2>&1 && [[ ! -e "${bin_dir}/fd" ]]; then
-  ln -sfn "$(command -v fdfind)" "${bin_dir}/fd"
-fi
-
-if [[ ! -x "${bin_dir}/uv" ]]; then
-  curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="${bin_dir}" UV_NO_MODIFY_PATH=1 sh
-fi
-
 bash "${repo_root}/build/install-python-dev-tools.sh"
 bash "${repo_root}/build/install-lazyvim.sh"
-
-missing_lazyvim_deps=()
-for cmd in rg fd unzip make gcc; do
-  if ! command -v "${cmd}" >/dev/null 2>&1; then
-    missing_lazyvim_deps+=("${cmd}")
-  fi
-done
 
 bash "${repo_root}/runtime/${flavor_name}/install-harness.sh"
 
@@ -315,19 +325,11 @@ Bootstrap complete.
 
 Prefix: ${prefix}
 Bin dir: ${bin_dir}
+Homebrew: ${homebrew_prefix}
 Flavor: ${flavor_name}
 Config home: ${config_home}
 
 Next steps:
   source "${prefix}/env.sh"
   ${flavor_name}-shell
-
-Notes:
-- Existing ~/.zshrc was not modified.
-- Shell config lives under ${shell_dir}.
 EOF
-
-if ((${#missing_lazyvim_deps[@]} > 0)); then
-  printf ' - LazyVim optional dependencies not found: %s\n' "${missing_lazyvim_deps[*]}"
-  echo "   First nvim launch still works, but some picker/build features may be limited until those commands are installed."
-fi

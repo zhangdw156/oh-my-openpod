@@ -1,10 +1,6 @@
 ARG DEVPOD_BASE_IMAGE=devpod
-ARG NODE_IMAGE=node:20-bookworm-slim
-FROM ${NODE_IMAGE} AS node-runtime
 
 FROM ${DEVPOD_BASE_IMAGE} AS geminipod-base
-
-COPY --from=node-runtime /usr/local/ /usr/local/
 
 COPY runtime/geminipod /opt/runtime/geminipod
 RUN OPENPOD_PREFIX=/opt/geminipod OPENPOD_BIN_DIR=/usr/local/bin OPENPOD_CONFIG_HOME=/root/.gemini \

@@ -1,8 +1,6 @@
 ARG DEVPOD_BASE_IMAGE=devpod
 FROM ${DEVPOD_BASE_IMAGE}
 
-RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm && rm -rf /var/lib/apt/lists/*
-
 COPY runtime/copilotpod /opt/runtime/copilotpod
 RUN OPENPOD_PREFIX=/opt/copilotpod OPENPOD_BIN_DIR=/usr/local/bin OPENPOD_CONFIG_HOME=/root/.copilot \
       bash /opt/runtime/copilotpod/install-harness.sh

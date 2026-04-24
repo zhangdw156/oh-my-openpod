@@ -19,7 +19,7 @@ done
 rm_line="$(rg -n 'rm -rf "\$\{vendor_home\}" "\$\{runtime_home\}"' "${bootstrap_script}" | cut -d: -f1 || true)"
 mkdir_line="$(rg -n 'mkdir -p "\$\{runtime_home\}"' "${bootstrap_script}" | tail -n1 | cut -d: -f1 || true)"
 copy_line="$(rg -n 'cp -R "\$\{repo_root\}/runtime/\$\{flavor_name\}/vendor" "\$\{runtime_vendor_home\}"' "${bootstrap_script}" | cut -d: -f1 || true)"
-uv_export_line="$(rg -n 'export OPENPOD_UV_BIN="\$\{bin_dir\}/uv"' "${bootstrap_script}" | cut -d: -f1 || true)"
+uv_export_line="$(rg -n 'export OPENPOD_UV_BIN="\$\{homebrew_prefix\}/bin/uv"' "${bootstrap_script}" | cut -d: -f1 || true)"
 python_tools_line="$(rg -n 'bash "\$\{repo_root\}/build/install-python-dev-tools\.sh"' "${bootstrap_script}" | cut -d: -f1 || true)"
 
 [[ -n "${rm_line}" ]] || fail "bootstrap missing runtime cleanup"
