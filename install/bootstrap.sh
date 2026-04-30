@@ -3,18 +3,18 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mode="user"
-flavor="openpod"
+flavor="devpod"
 prefix=""
 prefix_explicit=0
 
 usage() {
   cat <<'EOF'
-Usage: bash install/bootstrap.sh [--flavor openpod|claudepod|codexpod|copilotpod|geminipod] [--user] [--system] [--prefix PATH]
+Usage: bash install/bootstrap.sh [--flavor devpod|openpod|claudepod|codexpod|copilotpod|geminipod] [--user] [--system] [--prefix PATH]
 
 Bootstrap a pod-like environment on a Linux host or inside an existing container.
 
 Options:
-  --flavor NAME    Select the harness flavor: openpod, claudepod, codexpod, copilotpod, or geminipod
+  --flavor NAME    Select the harness flavor (default: devpod = base tools only)
   --user           Install into a user-owned prefix (default)
   --system         Install into /opt/<flavor> with binaries under /usr/local/bin
   --prefix PATH    Override the installation prefix
@@ -54,6 +54,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${flavor}" in
+  devpod)
+    flavor_name="devpod"
+    default_config_home_user="${HOME}/.config/devpod"
+    default_config_home_system="/root/.config/devpod"
+    ;;
   openpod)
     flavor_name="openpod"
     default_config_home_user="${HOME}/.config/opencode"
@@ -349,7 +354,18 @@ export OPENPOD_SHELL_DIR="${shell_dir}"
 bash "${repo_root}/build/install-python-dev-tools.sh"
 bash "${repo_root}/build/install-lazyvim.sh"
 
-bash "${repo_root}/runtime/${flavor_name}/install-harness.sh"
+if [[ "${flavor_name}" != "devpod" ]]; then
+  bash "${repo_root}/runtime/${flavor_name}/install-harness.sh"
+fi
+
+next_steps="  source \"${prefix}/env.sh\""
+if [[ "${flavor_name}" != "devpod" ]]; then
+  next_steps="${next_steps}
+  ${flavor_name}-shell"
+else
+  next_steps="${next_steps}
+  exec zsh"
+fi
 
 cat <<EOF
 Bootstrap complete.
@@ -361,6 +377,5 @@ Flavor: ${flavor_name}
 Config home: ${config_home}
 
 Next steps:
-  source "${prefix}/env.sh"
-  ${flavor_name}-shell
+${next_steps}
 EOF

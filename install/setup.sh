@@ -191,7 +191,7 @@ if [[ "${zsh_plugin_ok}" != "true" ]]; then
   warn "Some components failed to download (github.com unreachable)."
   echo "  For offline / restricted-network environments, use bootstrap.sh instead:"
   echo "    1. Copy the repo to this server (scp, rsync, USB, etc.)"
-  echo "    2. bash install/bootstrap.sh --flavor <flavor> --user"
+  echo "    2. bash install/bootstrap.sh --user"
   echo "  bootstrap.sh uses vendored assets and does not require github.com access."
 fi
 
