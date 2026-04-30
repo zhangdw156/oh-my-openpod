@@ -229,9 +229,12 @@ echo "Installing packages via Homebrew: ${brew_packages[*]}"
 brew install "${brew_packages[@]}"
 
 if [[ ! -x "$(command -v bun 2>/dev/null)" ]]; then
-  BUN_INSTALL="${HOME}/.bun" curl -fsSL https://bun.sh/install | bash
-  ln -sfn "${HOME}/.bun/bin/bun" "${bin_dir}/bun"
-  ln -sfn "${HOME}/.bun/bin/bun" "${bin_dir}/bunx"
+  if BUN_INSTALL="${HOME}/.bun" curl -fsSL https://bun.sh/install | bash; then
+    ln -sfn "${HOME}/.bun/bin/bun" "${bin_dir}/bun"
+    ln -sfn "${HOME}/.bun/bin/bun" "${bin_dir}/bunx"
+  else
+    echo "Warning: Bun installation failed (network issue?); skipping" >&2
+  fi
 fi
 
 # ── Vendor assets (shell/editor configs) ──────────────────────────────

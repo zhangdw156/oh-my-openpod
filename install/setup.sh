@@ -62,12 +62,12 @@ brew install "${packages[@]}"
 # ── Bun ───────────────────────────────────────────────────────────────
 if ! command -v bun >/dev/null 2>&1; then
   info "Installing bun..."
-  BUN_INSTALL="${HOME}/.bun" curl -fsSL https://bun.sh/install | bash
+  BUN_INSTALL="${HOME}/.bun" curl -fsSL https://bun.sh/install | bash || warn "Bun installation failed (network issue?); skipping"
 fi
 
 # ── Python tools ──────────────────────────────────────────────────────
 info "Installing harlequin..."
-uv tool install --force "harlequin==2.5.2"
+uv tool install --force "harlequin==2.5.2" || warn "Harlequin installation failed; skipping"
 
 # ── Zsh plugins ───────────────────────────────────────────────────────
 info "Setting up zsh plugins..."
