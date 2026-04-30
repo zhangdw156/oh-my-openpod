@@ -92,10 +92,12 @@ download_vendor_tree() {
     _tmp="$(mktemp -d)"
     if git clone --depth 1 --filter=blob:none --sparse --no-checkout --quiet \
          "$(_git_url "${host}")" "${_tmp}/repo" 2>/dev/null \
-       && git -C "${_tmp}/repo" sparse-checkout set vendor/zsh config/.p10k.zsh 2>/dev/null \
+       && git -C "${_tmp}/repo" sparse-checkout set vendor/zsh vendor/nvim config/.p10k.zsh config/nvim 2>/dev/null \
        && git -C "${_tmp}/repo" checkout --quiet 2>/dev/null; then
       cp -R "${_tmp}/repo/vendor/zsh" "${dest}/vendor_zsh"
+      [[ ! -d "${_tmp}/repo/vendor/nvim" ]] || cp -R "${_tmp}/repo/vendor/nvim" "${dest}/vendor_nvim"
       [[ ! -f "${_tmp}/repo/config/.p10k.zsh" ]] || cp "${_tmp}/repo/config/.p10k.zsh" "${dest}/p10k.zsh"
+      [[ ! -d "${_tmp}/repo/config/nvim" ]] || cp -R "${_tmp}/repo/config/nvim" "${dest}/config_nvim"
       rm -rf "${_tmp}"
       info "Downloaded assets via sparse checkout from ${host}"
       return 0
@@ -108,10 +110,12 @@ download_vendor_tree() {
     _tmp="$(mktemp -d)"
     if curl -fsSL --connect-timeout 10 --max-time 300 "$(_archive_url "${host}")" 2>/dev/null \
        | tar xz --strip-components 1 --wildcards -C "${_tmp}" \
-           '*/vendor/zsh/*' '*/config/.p10k.zsh' 2>/dev/null; then
+           '*/vendor/zsh/*' '*/vendor/nvim/*' '*/config/.p10k.zsh' '*/config/nvim/*' 2>/dev/null; then
       if [[ -d "${_tmp}/vendor/zsh" ]]; then
         cp -R "${_tmp}/vendor/zsh" "${dest}/vendor_zsh"
+        [[ ! -d "${_tmp}/vendor/nvim" ]] || cp -R "${_tmp}/vendor/nvim" "${dest}/vendor_nvim"
         [[ ! -f "${_tmp}/config/.p10k.zsh" ]] || cp "${_tmp}/config/.p10k.zsh" "${dest}/p10k.zsh"
+        [[ ! -d "${_tmp}/config/nvim" ]] || cp -R "${_tmp}/config/nvim" "${dest}/config_nvim"
         rm -rf "${_tmp}"
         info "Downloaded assets via archive from ${host}"
         return 0
@@ -198,6 +202,21 @@ if download_vendor_tree "${_asset_tmp}"; then
 
   if [[ -f "${_asset_tmp}/p10k.zsh" ]]; then
     cp "${_asset_tmp}/p10k.zsh" "${HOME}/.p10k.zsh"
+  fi
+
+  # LazyVim starter + overlay
+  if [[ -d "${_asset_tmp}/vendor_nvim/lazyvim-starter" ]]; then
+    info "Setting up LazyVim..."
+    _nvim_config="${HOME}/.config/nvim"
+    if [[ -d "${_nvim_config}" ]]; then
+      mv "${_nvim_config}" "${_nvim_config}.bak.$(date +%s)"
+      warn "Existing nvim config backed up"
+    fi
+    cp -R "${_asset_tmp}/vendor_nvim/lazyvim-starter" "${_nvim_config}"
+    if [[ -d "${_asset_tmp}/config_nvim" ]]; then
+      cp -R "${_asset_tmp}/config_nvim/." "${_nvim_config}"
+    fi
+    rm -rf "${_nvim_config}/.git" "${_nvim_config}/.openpod-source-commit"
   fi
 else
   warn "Failed to download vendored assets from any mirror"
