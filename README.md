@@ -157,8 +157,17 @@ docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -
 在任意 Linux 服务器上运行以下命令，即可安装 devpod 全部共享工具链（无需 sudo）：
 
 ```bash
+# GitHub（默认）
 curl -fsSL https://raw.githubusercontent.com/zhangdw156/oh-my-devpod/main/install/setup.sh | bash
+
+# Gitee（国内镜像，GitHub 不可达时使用）
+curl -fsSL https://gitee.com/zhangdw156/oh-my-devpod/raw/main/install/setup.sh | bash
+
+# GitLab
+curl -fsSL https://gitlab.com/zhangdw156/oh-my-devpod/-/raw/main/install/setup.sh | bash
 ```
+
+脚本会自动探测 github.com / gitee.com / gitlab.com 的可达性，从可用源下载所有依赖。
 
 宿主机仅需预装 `bash`、`curl` 和 `git`。脚本会自动安装 Homebrew 并通过 brew 管理所有依赖：
 
@@ -177,6 +186,7 @@ Bootstrap 仅需宿主机有 `bash`、`curl` 和 `tar`，会自动安装 Homebre
 统一入口：
 
 ```bash
+bash install/bootstrap.sh --user                          # 仅安装基础工具
 bash install/bootstrap.sh --flavor openpod --user
 bash install/bootstrap.sh --flavor claudepod --user
 bash install/bootstrap.sh --flavor codexpod --user

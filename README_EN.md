@@ -157,8 +157,17 @@ docker run --rm --network host --user "$(id -u):$(id -g)" -v "$PWD:/workspace" -
 Run the following command on any Linux server to install the full devpod shared toolchain (no sudo required):
 
 ```bash
+# GitHub (default)
 curl -fsSL https://raw.githubusercontent.com/zhangdw156/oh-my-devpod/main/install/setup.sh | bash
+
+# Gitee (China mirror, use when GitHub is unreachable)
+curl -fsSL https://gitee.com/zhangdw156/oh-my-devpod/raw/main/install/setup.sh | bash
+
+# GitLab
+curl -fsSL https://gitlab.com/zhangdw156/oh-my-devpod/-/raw/main/install/setup.sh | bash
 ```
+
+The script auto-detects reachable git hosts (github.com / gitee.com / gitlab.com) and downloads all dependencies from the first available source.
 
 The host only needs `bash`, `curl`, and `git`. The script installs Homebrew and manages all dependencies via brew:
 
@@ -177,6 +186,7 @@ Bootstrap only requires `bash`, `curl`, and `tar` on the host. It automatically 
 Single entrypoint:
 
 ```bash
+bash install/bootstrap.sh --user                          # base tools only
 bash install/bootstrap.sh --flavor openpod --user
 bash install/bootstrap.sh --flavor claudepod --user
 bash install/bootstrap.sh --flavor codexpod --user
