@@ -32,9 +32,9 @@ DEVPOD_GIT=""
 
 _make_test_url() {
   case "$1" in
-    github.com) echo "https://raw.githubusercontent.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/main/VERSION" ;;
-    gitee.com)  echo "https://gitee.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/raw/main/VERSION" ;;
-    gitlab.com) echo "https://gitlab.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/-/raw/main/VERSION" ;;
+    github.com) echo "https://github.com/${DEVPOD_OWNER}/${DEVPOD_REPO}" ;;
+    gitee.com)  echo "https://gitee.com/${DEVPOD_OWNER}/${DEVPOD_REPO}" ;;
+    gitlab.com) echo "https://gitlab.com/${DEVPOD_OWNER}/${DEVPOD_REPO}" ;;
   esac
 }
 
@@ -107,13 +107,12 @@ brew install "${packages[@]}"
 # ── Bun ───────────────────────────────────────────────────────────────
 if ! command -v bun >/dev/null 2>&1; then
   info "Installing bun..."
-  if BUN_INSTALL="${HOME}/.bun" curl -fsSL https://bun.sh/install | bash; then
-    :
-  elif command -v npm >/dev/null 2>&1; then
-    info "Retrying bun via npm..."
+  if [[ "${DEVPOD_SOURCE}" == "github.com" ]]; then
+    BUN_INSTALL="${HOME}/.bun" curl -fsSL https://bun.sh/install | bash || true
+  fi
+  if ! command -v bun >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+    info "Installing bun via npm..."
     npm install -g bun || warn "Bun installation failed; skipping"
-  else
-    warn "Bun installation failed (network issue?); skipping"
   fi
 fi
 
@@ -156,7 +155,7 @@ else
       git -C "${dest}" pull --quiet 2>/dev/null || true
     else
       rm -rf "${dest}"
-      git clone --depth 1 --quiet "https://github.com/${repo}.git" "${dest}" || return 1
+      timeout 30 git clone --depth 1 --quiet "https://github.com/${repo}.git" "${dest}" || return 1
     fi
   }
 
