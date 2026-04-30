@@ -304,8 +304,14 @@ fi
 zsh_path="$(command -v zsh 2>/dev/null || true)"
 echo ""
 if [[ -n "${zsh_path}" ]]; then
-  echo "To use zsh as your default shell:"
-  echo "  chsh -s ${zsh_path}"
+  if ! grep -qxF "${zsh_path}" /etc/shells 2>/dev/null; then
+    echo "To set zsh as your default shell, first register it:"
+    echo "  echo ${zsh_path} | sudo tee -a /etc/shells"
+    echo "  chsh -s ${zsh_path}"
+  else
+    echo "To set zsh as your default shell:"
+    echo "  chsh -s ${zsh_path}"
+  fi
   echo ""
   echo "Or start zsh now:"
   echo "  exec ${zsh_path}"
