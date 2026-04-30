@@ -61,6 +61,8 @@ bash runtime/openpod/vendor/opencode/packages/superpowers/tests/opencode/run-tes
 - The single source of truth for image and release versions is the root `VERSION` file.
 - Pod-local compose files stay the local runtime contract for each flavor and only consume `${IMAGE_VERSION:-local}`; they do not read `VERSION` automatically.
 - `.github/workflows/publish-ghcr.yml` reads `VERSION` directly.
+- Releases go through PRs with `gh pr merge --squash --delete-branch` to keep a clean branch history. The release machine has `gh` available.
+- Do not create release or version-bump commits directly on main; always use a PR.
 
 Release flow details live in `DEVELOPMENT.md`.
 

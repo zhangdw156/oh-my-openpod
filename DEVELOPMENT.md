@@ -161,12 +161,14 @@ git checkout main
 git pull --ff-only origin main
 git checkout -b release/x.y.z
 
-# 2. 同步修改根目录 `VERSION` 将版本号改为正式版本（去掉开发后缀）
+# 2. 修改 VERSION 为正式版本（去掉 .devN 后缀）
 git add VERSION
 git commit -m "release: cut x.y.z"
 git push -u origin release/x.y.z
 
-# 3. 提 PR 合并到 main
+# 3. 创建 PR 并 squash 合并（自动删除分支）
+gh pr create --title "release: cut x.y.z" --body ""
+gh pr merge --squash --delete-branch
 #    合并后，GitHub Actions 会自动构建并发布：
 #    ghcr.io/zhangdw156/devpod:x.y.z
 #    ghcr.io/zhangdw156/openpod:x.y.z
@@ -184,11 +186,12 @@ git push origin vx.y.z
 
 # 5. 开始下一个版本的开发
 git checkout -b chore/bump-version-to-next-dev
-#    只需把根目录 `VERSION` 更新到 <next-version>.dev0；如需让 pod-local compose 使用相同标签，需显式注入 IMAGE_VERSION
 git add VERSION
 git commit -m "chore: bump version to <next-version>.dev0"
 git push -u origin chore/bump-version-to-next-dev
 
-# 6. 提 PR 合并到 main
+# 6. 创建 PR 并 squash 合并（自动删除分支）
+gh pr create --title "chore: bump version to <next-version>.dev0" --body ""
+gh pr merge --squash --delete-branch
 #    这次 workflow 会自动跳过镜像发布，因为版本使用 .devN 开发后缀
 ```
