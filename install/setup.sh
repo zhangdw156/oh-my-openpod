@@ -11,6 +11,7 @@ DEVPOD_DATA="${HOME}/.local/share/devpod"
 DEVPOD_ZSH="${DEVPOD_DATA}/zsh"
 DEVPOD_OWNER="zhangdw156"
 DEVPOD_REPO="oh-my-devpod"
+DEVPOD_BRANCH="main"
 
 info()  { printf '\033[1;34m==>\033[0m \033[1m%s\033[0m\n' "$*"; }
 warn()  { printf '\033[1;33mWarning:\033[0m %s\n' "$*" >&2; }
@@ -24,46 +25,103 @@ for cmd in bash curl git; do
   command -v "$cmd" >/dev/null 2>&1 || error "Missing required command: $cmd"
 done
 
-# ── Mirror detection ─────────────────────────────────────────────────
-info "Detecting reachable git host..."
-DEVPOD_SOURCE="none"
-DEVPOD_RAW=""
-DEVPOD_GIT=""
-
-_make_test_url() {
-  case "$1" in
-    github.com) echo "https://github.com/${DEVPOD_OWNER}/${DEVPOD_REPO}" ;;
-    gitee.com)  echo "https://gitee.com/${DEVPOD_OWNER}/${DEVPOD_REPO}" ;;
-    gitlab.com) echo "https://gitlab.com/${DEVPOD_OWNER}/${DEVPOD_REPO}" ;;
-  esac
-}
-
+# ── Mirror infrastructure ────────────────────────────────────────────
+info "Probing git hosts..."
+MIRROR_HOSTS=()
 for _host in github.com gitee.com gitlab.com; do
-  if curl -fsSL --connect-timeout 5 --max-time 10 -o /dev/null "$(_make_test_url "${_host}")" 2>/dev/null; then
-    DEVPOD_SOURCE="${_host}"
-    break
+  if curl -fsSL --connect-timeout 3 --max-time 5 -o /dev/null \
+       "https://${_host}/${DEVPOD_OWNER}/${DEVPOD_REPO}" 2>/dev/null; then
+    MIRROR_HOSTS+=("${_host}")
+    printf '  \033[32m✓\033[0m %s\n' "${_host}"
+  else
+    printf '  \033[31m✗\033[0m %s\n' "${_host}"
   fi
 done
 
-case "${DEVPOD_SOURCE}" in
-  github.com)
-    DEVPOD_RAW="https://raw.githubusercontent.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/main"
-    DEVPOD_GIT="https://github.com"
-    ;;
-  gitee.com)
-    DEVPOD_RAW="https://gitee.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/raw/main"
-    DEVPOD_GIT="https://gitee.com"
-    ;;
-  gitlab.com)
-    DEVPOD_RAW="https://gitlab.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/-/raw/main"
-    DEVPOD_GIT="https://gitlab.com"
-    ;;
-  *)
-    warn "No reachable git host found; some components may fail to install"
-    ;;
-esac
+if [[ ${#MIRROR_HOSTS[@]} -eq 0 ]]; then
+  warn "No reachable git host found; some components may fail to install"
+fi
+info "Mirrors: ${MIRROR_HOSTS[*]:-none}"
 
-info "Using source: ${DEVPOD_SOURCE}"
+_raw_url() {
+  local host="$1" path="$2"
+  case "${host}" in
+    github.com) echo "https://raw.githubusercontent.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/${DEVPOD_BRANCH}/${path}" ;;
+    gitee.com)  echo "https://gitee.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/raw/${DEVPOD_BRANCH}/${path}" ;;
+    gitlab.com) echo "https://gitlab.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/-/raw/${DEVPOD_BRANCH}/${path}" ;;
+  esac
+}
+
+_git_url() {
+  echo "https://$1/${DEVPOD_OWNER}/${DEVPOD_REPO}.git"
+}
+
+_archive_url() {
+  local host="$1"
+  case "${host}" in
+    github.com) echo "https://github.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/archive/refs/heads/${DEVPOD_BRANCH}.tar.gz" ;;
+    gitee.com)  echo "https://gitee.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/repository/archive/${DEVPOD_BRANCH}.tar.gz" ;;
+    gitlab.com) echo "https://gitlab.com/${DEVPOD_OWNER}/${DEVPOD_REPO}/-/archive/${DEVPOD_BRANCH}/${DEVPOD_REPO}-${DEVPOD_BRANCH}.tar.gz" ;;
+  esac
+}
+
+_host_reachable() {
+  local h
+  for h in "${MIRROR_HOSTS[@]:-}"; do
+    [[ "${h}" == "$1" ]] && return 0
+  done
+  return 1
+}
+
+download_file() {
+  local repo_path="$1" dest="$2" host
+  for host in "${MIRROR_HOSTS[@]:-}"; do
+    if curl -fsSL --connect-timeout 10 --max-time 60 \
+         "$(_raw_url "${host}" "${repo_path}")" -o "${dest}" 2>/dev/null; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+download_vendor_tree() {
+  local dest="$1" host _tmp
+
+  # Strategy 1: sparse checkout (~4MB download)
+  for host in "${MIRROR_HOSTS[@]:-}"; do
+    _tmp="$(mktemp -d)"
+    if git clone --depth 1 --filter=blob:none --sparse --no-checkout --quiet \
+         "$(_git_url "${host}")" "${_tmp}/repo" 2>/dev/null \
+       && git -C "${_tmp}/repo" sparse-checkout set vendor/zsh config/.p10k.zsh 2>/dev/null \
+       && git -C "${_tmp}/repo" checkout --quiet 2>/dev/null; then
+      cp -R "${_tmp}/repo/vendor/zsh" "${dest}/vendor_zsh"
+      [[ ! -f "${_tmp}/repo/config/.p10k.zsh" ]] || cp "${_tmp}/repo/config/.p10k.zsh" "${dest}/p10k.zsh"
+      rm -rf "${_tmp}"
+      info "Downloaded assets via sparse checkout from ${host}"
+      return 0
+    fi
+    rm -rf "${_tmp}"
+  done
+
+  # Strategy 2: archive selective extract (streams ~73MB, writes ~15MB)
+  for host in "${MIRROR_HOSTS[@]:-}"; do
+    _tmp="$(mktemp -d)"
+    if curl -fsSL --connect-timeout 10 --max-time 300 "$(_archive_url "${host}")" 2>/dev/null \
+       | tar xz --strip-components 1 --wildcards -C "${_tmp}" \
+           '*/vendor/zsh/*' '*/config/.p10k.zsh' 2>/dev/null; then
+      if [[ -d "${_tmp}/vendor/zsh" ]]; then
+        cp -R "${_tmp}/vendor/zsh" "${dest}/vendor_zsh"
+        [[ ! -f "${_tmp}/config/.p10k.zsh" ]] || cp "${_tmp}/config/.p10k.zsh" "${dest}/p10k.zsh"
+        rm -rf "${_tmp}"
+        info "Downloaded assets via archive from ${host}"
+        return 0
+      fi
+    fi
+    rm -rf "${_tmp}"
+  done
+
+  return 1
+}
 
 # ── Homebrew ──────────────────────────────────────────────────────────
 if [[ -x "${HOMEBREW_PREFIX}/bin/brew" ]]; then
@@ -107,7 +165,7 @@ brew install "${packages[@]}"
 # ── Bun ───────────────────────────────────────────────────────────────
 if ! command -v bun >/dev/null 2>&1; then
   info "Installing bun..."
-  if [[ "${DEVPOD_SOURCE}" == "github.com" ]]; then
+  if _host_reachable "github.com"; then
     BUN_INSTALL="${HOME}/.bun" curl -fsSL https://bun.sh/install | bash || true
   fi
   if ! command -v bun >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
@@ -120,73 +178,37 @@ fi
 info "Installing harlequin..."
 uv tool install --force "harlequin==2.5.2" || warn "Harlequin installation failed; skipping"
 
-# ── Clone repo for vendored assets (when github.com is unreachable) ──
-_repo_tmp=""
-if [[ "${DEVPOD_SOURCE}" != "github.com" && -n "${DEVPOD_GIT}" ]]; then
-  info "github.com unreachable; cloning repo from ${DEVPOD_SOURCE} for vendored assets..."
-  _repo_tmp="$(mktemp -d)"
-  if ! git clone --depth 1 --quiet "${DEVPOD_GIT}/${DEVPOD_OWNER}/${DEVPOD_REPO}.git" "${_repo_tmp}"; then
-    warn "Failed to clone repo from ${DEVPOD_SOURCE}"
-    rm -rf "${_repo_tmp}"
-    _repo_tmp=""
-  fi
-fi
-
-# ── Zsh plugins ───────────────────────────────────────────────────────
-info "Setting up zsh plugins..."
+# ── Vendored assets (zsh plugins + p10k) ─────────────────────────────
+info "Downloading vendored assets from mirrors..."
 mkdir -p "${DEVPOD_ZSH}"
 
+_asset_tmp="$(mktemp -d)"
 zsh_plugin_ok=true
 
-if [[ -n "${_repo_tmp}" ]]; then
+if download_vendor_tree "${_asset_tmp}"; then
   for _dir in ohmyzsh powerlevel10k zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting; do
-    if [[ -d "${_repo_tmp}/vendor/zsh/${_dir}" ]]; then
+    if [[ -d "${_asset_tmp}/vendor_zsh/${_dir}" ]]; then
       rm -rf "${DEVPOD_ZSH:?}/${_dir}"
-      cp -R "${_repo_tmp}/vendor/zsh/${_dir}" "${DEVPOD_ZSH}/${_dir}"
+      cp -R "${_asset_tmp}/vendor_zsh/${_dir}" "${DEVPOD_ZSH}/${_dir}"
     else
-      warn "Vendored plugin ${_dir} not found in repo"
+      warn "Plugin ${_dir} not found in downloaded assets"
       zsh_plugin_ok=false
     fi
   done
-else
-  clone_or_pull() {
-    local repo="$1" dest="$2"
-    if [[ -d "${dest}/.git" ]]; then
-      git -C "${dest}" pull --quiet 2>/dev/null || true
-    else
-      rm -rf "${dest}"
-      timeout 30 git clone --depth 1 --quiet "https://github.com/${repo}.git" "${dest}" || return 1
-    fi
-  }
 
-  for _plugin in \
-    "ohmyzsh/ohmyzsh:ohmyzsh" \
-    "romkatv/powerlevel10k:powerlevel10k" \
-    "zsh-users/zsh-autosuggestions:zsh-autosuggestions" \
-    "zsh-users/zsh-history-substring-search:zsh-history-substring-search" \
-    "zsh-users/zsh-syntax-highlighting:zsh-syntax-highlighting"; do
-    _repo="${_plugin%%:*}"
-    _dir="${_plugin##*:}"
-    if ! clone_or_pull "${_repo}" "${DEVPOD_ZSH}/${_dir}"; then
-      warn "Failed to clone ${_repo} (network issue?); skipping"
-      zsh_plugin_ok=false
-    fi
-  done
+  if [[ -f "${_asset_tmp}/p10k.zsh" ]]; then
+    cp "${_asset_tmp}/p10k.zsh" "${HOME}/.p10k.zsh"
+  fi
+else
+  warn "Failed to download vendored assets from any mirror"
+  zsh_plugin_ok=false
+
+  info "Trying raw URL for .p10k.zsh..."
+  download_file "config/.p10k.zsh" "${HOME}/.p10k.zsh" \
+    || warn "Failed to download .p10k.zsh"
 fi
 
-# ── .p10k.zsh ─────────────────────────────────────────────────────────
-info "Setting up powerlevel10k preset..."
-if [[ -n "${_repo_tmp}" && -f "${_repo_tmp}/config/.p10k.zsh" ]]; then
-  cp "${_repo_tmp}/config/.p10k.zsh" "${HOME}/.p10k.zsh"
-elif [[ -n "${DEVPOD_RAW}" ]]; then
-  curl -fsSL --connect-timeout 15 "${DEVPOD_RAW}/config/.p10k.zsh" -o "${HOME}/.p10k.zsh" \
-    || warn "Failed to download .p10k.zsh; skipping"
-else
-  warn "No source available for .p10k.zsh; skipping"
-fi
-
-# ── Cleanup temp repo ────────────────────────────────────────────────
-[[ -z "${_repo_tmp}" ]] || rm -rf "${_repo_tmp}"
+rm -rf "${_asset_tmp}"
 
 # ── .zshrc ────────────────────────────────────────────────────────────
 info "Writing ~/.zshrc..."
